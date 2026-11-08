@@ -1,5 +1,6 @@
-import { ChevronDown, Info, Undo2 } from 'lucide-react';
-import { useState } from 'react';
+import { ChevronDown, Info, Plus, Search, Undo2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { CATALOG, matchCatalog, searchCatalog, type CatalogItem } from '../../../shared/catalog';
 import { addDays, centsToInput, formatMoney, parseMoneyToCents } from '../../../shared/finance';
 import {
   PAYMENT_METHODS,
@@ -9,52 +10,159 @@ import {
 } from '../../../shared/types';
 import { api, errorMessage } from '../../lib/api';
 import { useApp } from '../../lib/context';
-import { useBusy } from '../../lib/hooks';
+import { useApi, useBusy } from '../../lib/hooks';
 import { formatShort, METHOD_LABEL } from '../../lib/labels';
-import { CategoryIcon } from '../CategoryIcon';
-import { MoneyField, Segmented, Sheet, TypeBadge } from '../ui';
+import { autoClassify } from '../../lib/quickAdd';
+import { ItemThumb } from '../ItemThumb';
+import { MoneyField, Sheet } from '../ui';
 
-/** Quick add (amount → category → save) and edit, with refund + delete. */
-export function ExpenseForm({ expense, onClose }: { expense?: Expense; onClose: () => void }) {
+/** Everyday purchases shown before the user has any history. */
+const STARTERS = ['fuel', 'groceries', 'bus', 'tuk', 'medicine', 'reload', 'coffee', 'restaurant'];
+
+interface Pick {
+  name: string;
+  item?: CatalogItem;
+  category_id: number | null;
+  lastAmount?: number;
+}
+
+/** "What did you buy?" → amount → save. Edit mode adds refund + delete. */
+export function ExpenseForm({
+  expense,
+  prefill,
+  onClose,
+}: {
+  expense?: Expense;
+  prefill?: { note: string; category_id: number | null };
+  onClose: () => void;
+}) {
   const app = useApp();
   const { activeCategories, categoryById, checkPurchase, toast, changed, today, confirm } = app;
   const editing = Boolean(expense);
   const isRefund = expense?.refund_of != null;
+  const startNote = expense?.note ?? prefill?.note ?? '';
   const [amount, setAmount] = useState(
     centsToInput(expense ? Math.abs(expense.amount_cents) : null),
   );
-  const [categoryId, setCategoryId] = useState<number | null>(expense?.category_id ?? null);
-  const [type, setType] = useState<EntryType | null>(expense?.type ?? null);
+  const [note, setNote] = useState(startNote);
+  const [categoryId, setCategoryId] = useState<number | null>(
+    expense?.category_id ?? prefill?.category_id ?? null,
+  );
+  const [picked, setPicked] = useState(Boolean(startNote || expense?.category_id));
+  const [query, setQuery] = useState('');
   const [date, setDate] = useState(expense?.date ?? today);
   const [method, setMethod] = useState<PaymentMethod>(expense?.payment_method ?? 'cash');
-  const [note, setNote] = useState(expense?.note ?? '');
   const [error, setError] = useState<string | null>(null);
   const [refundAmount, setRefundAmount] = useState('');
   const [showRefund, setShowRefund] = useState(false);
   const { busy, run } = useBusy();
 
+  // Things this person buys often (last 90 days) become one-tap shortcuts.
+  const history = useApi<{ expenses: Expense[] }>(
+    editing ? null : `/api/expenses?from=${addDays(today, -90)}&to=${today}`,
+    [],
+  );
+  const frequent = useMemo<Pick[]>(() => {
+    const map = new Map<string, Pick & { count: number }>();
+    for (const e of history.data?.expenses ?? []) {
+      if (!e.note || e.refund_of || e.fixed_bill_id || e.amount_cents <= 0) continue;
+      const key = e.note.trim().toLowerCase();
+      const hit = map.get(key);
+      if (hit) hit.count += 1;
+      // list is newest first, so the first one seen holds the latest amount
+      else
+        map.set(key, {
+          name: e.note.trim(),
+          category_id: e.category_id,
+          lastAmount: e.amount_cents,
+          count: 1,
+          item: matchCatalog(e.note),
+        });
+    }
+    return [...map.values()]
+      .filter((p) => p.count >= 2)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 8);
+  }, [history.data]);
+
+  const shortcuts = useMemo<Pick[]>(() => {
+    const out: Pick[] = [...frequent];
+    for (const id of STARTERS) {
+      if (out.length >= 8) break;
+      const item = CATALOG.find((c) => c.id === id);
+      if (!item || out.some((p) => p.name.toLowerCase() === item.name.toLowerCase())) continue;
+      out.push({
+        name: item.name,
+        item,
+        category_id: autoClassify(item.name, activeCategories, item).category?.id ?? null,
+      });
+    }
+    return out;
+  }, [frequent, activeCategories]);
+
+  const suggestions = useMemo<Pick[]>(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    const fromHistory = frequent.filter((p) => p.name.toLowerCase().includes(q));
+    const fromCatalog = searchCatalog(q, 6)
+      .filter((c) => !fromHistory.some((p) => p.name.toLowerCase() === c.name.toLowerCase()))
+      .map((item) => ({
+        name: item.name,
+        item,
+        category_id: autoClassify(item.name, activeCategories, item).category?.id ?? null,
+      }));
+    return [...fromHistory, ...fromCatalog].slice(0, 6);
+  }, [query, frequent, activeCategories]);
+
+  const choose = (p: Pick) => {
+    setNote(p.name);
+    setCategoryId(
+      p.category_id ?? autoClassify(p.name, activeCategories, p.item).category?.id ?? null,
+    );
+    if (p.lastAmount && !amount) setAmount(centsToInput(p.lastAmount));
+    setPicked(true);
+    setQuery('');
+    setError(null);
+  };
+
+  const chooseTyped = () => {
+    const text = query.trim();
+    if (!text) return;
+    choose({ name: text, category_id: autoClassify(text, activeCategories).category?.id ?? null });
+  };
+
   const category = categoryById(categoryId);
-  const effectiveType: EntryType = type ?? category?.type ?? 'WANT';
 
   const save = () =>
     run(async () => {
       const cents = parseMoneyToCents(amount);
       if (cents === null || cents <= 0) {
-        setError('Please enter an amount, for example 1250 or 1,250.50.');
+        setError('Please enter the amount.');
         return;
       }
-      if (!categoryId && !editing) {
-        setError('Please choose a category.');
+      let finalNote = note.trim();
+      let finalCategory = categoryId;
+      if (!picked && query.trim()) {
+        finalNote = query.trim();
+        finalCategory = autoClassify(finalNote, activeCategories).category?.id ?? null;
+      }
+      if (!finalNote && !finalCategory && !editing) {
+        setError('Tell us what you bought – type it or tap one of the items.');
         return;
+      }
+      if (!finalCategory && !editing) {
+        finalCategory = activeCategories.find((c) => c.name === 'Other')?.id ?? null;
       }
       setError(null);
+      const cat = categoryById(finalCategory);
+      const type: EntryType = cat?.type ?? autoClassify(finalNote, activeCategories).type;
       const body = {
         amount_cents: cents,
-        category_id: categoryId,
-        type: effectiveType,
+        category_id: finalCategory,
+        type,
         date,
         payment_method: method,
-        note: note.trim() || null,
+        note: finalNote || null,
       };
       try {
         if (editing && expense) {
@@ -64,16 +172,16 @@ export function ExpenseForm({ expense, onClose }: { expense?: Expense; onClose: 
           onClose();
           return;
         }
-        // Smart warning for wants (needs never get a check when added directly).
+        // Gentle check for wants only.
         const choice =
-          effectiveType === 'WANT'
-            ? await checkPurchase({ amount_cents: cents, type: 'WANT', category_id: categoryId })
+          type === 'WANT'
+            ? await checkPurchase({ amount_cents: cents, type: 'WANT', category_id: finalCategory })
             : 'buy';
         if (choice === 'cancel') return;
         if (choice === 'buy') {
           const res = await api<{ expense: Expense }>('/api/expenses', { method: 'POST', body });
           toast({
-            message: `Saved ${formatMoney(cents, app.currency)}${category ? ` · ${category.name}` : ''}`,
+            message: `Saved ${formatMoney(cents, app.currency)}${finalNote ? ` · ${finalNote}` : ''}`,
             actionLabel: 'Undo',
             onAction: () => {
               api(`/api/expenses/${res.expense.id}`, { method: 'DELETE' })
@@ -82,14 +190,13 @@ export function ExpenseForm({ expense, onClose }: { expense?: Expense; onClose: 
             },
           });
         } else {
-          // Remind later / next month → keep it on the wishlist instead of spending now.
           const cooling = app.boot?.settings.cooling_days ?? 7;
           const reminder = choice === 'remind' ? addDays(today, cooling) : null;
           const res = await api<{ item: { id: number } }>('/api/wishlist', {
             method: 'POST',
             body: {
-              name: note.trim() || category?.name || 'Purchase',
-              category_id: categoryId,
+              name: finalNote || cat?.name || 'Purchase',
+              category_id: finalCategory,
               type: 'WANT',
               estimated_cents: cents,
               urgency: 'THIS_MONTH',
@@ -103,9 +210,7 @@ export function ExpenseForm({ expense, onClose }: { expense?: Expense; onClose: 
             });
             toast({ message: 'Saved to your wishlist for next month. Nothing was spent.' });
           } else {
-            toast({
-              message: `Saved to your wishlist. Reminder set for ${formatShort(reminder!)}.`,
-            });
+            toast({ message: `Saved to your wishlist. Reminder on ${formatShort(reminder!)}.` });
           }
         }
         changed();
@@ -158,11 +263,7 @@ export function ExpenseForm({ expense, onClose }: { expense?: Expense; onClose: 
 
   const title = isRefund ? 'Edit refund' : editing ? 'Edit expense' : 'New expense';
   return (
-    <Sheet
-      title={title}
-      subtitle={editing ? undefined : 'Amount, category, save – that is all you need.'}
-      onClose={onClose}
-    >
+    <Sheet title={title} onClose={onClose}>
       <form
         className="stack"
         onSubmit={(e) => {
@@ -170,43 +271,114 @@ export function ExpenseForm({ expense, onClose }: { expense?: Expense; onClose: 
           void save();
         }}
       >
-        <MoneyField
-          label={isRefund ? 'Refund amount' : 'Amount'}
-          value={amount}
-          onChange={setAmount}
-          autoFocus
-          big
-        />
-
         {!isRefund && (
           <div className="field">
-            <span className="label">Category</span>
-            <div className="chips" role="group" aria-label="Category">
-              {activeCategories.map((c) => (
+            <span className="label">What did you buy?</span>
+            {picked ? (
+              <div className="picked">
+                <ItemThumb name={note} category={category} size={44} />
+                <span className="grow" style={{ minWidth: 0 }}>
+                  <span className="item-title ellipsis" style={{ display: 'block' }}>
+                    {note || category?.name || 'Expense'}
+                  </span>
+                  <span className="item-meta">{category?.name ?? 'Other'}</span>
+                </span>
                 <button
-                  key={c.id}
                   type="button"
-                  className="chip"
-                  aria-pressed={categoryId === c.id}
+                  className="btn sm ghost"
                   onClick={() => {
-                    setCategoryId(c.id);
-                    setType(null);
+                    setPicked(false);
+                    setQuery('');
                   }}
                 >
-                  <CategoryIcon icon={c.icon} name={c.name} color={c.color} size="sm" />
-                  {c.name}
-                  <span className="sr-only">({c.type === 'NEED' ? 'need' : 'want'})</span>
+                  Change
                 </button>
-              ))}
-            </div>
-            {category && (
-              <span className="hint row">
-                <TypeBadge type={effectiveType} />
-                {type === null ? `Based on the ${category.name} category` : 'Set by you'}
-              </span>
+              </div>
+            ) : (
+              <>
+                <div className="search-box">
+                  <Search size={18} className="search-icon" aria-hidden="true" />
+                  <input
+                    className="search-input"
+                    aria-label="What did you buy?"
+                    placeholder="Type it… e.g. fuel, rice, bus"
+                    value={query}
+                    autoFocus
+                    autoComplete="off"
+                    onChange={(e) => setQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && query.trim()) {
+                        e.preventDefault();
+                        const first = suggestions[0];
+                        if (first) choose(first);
+                        else chooseTyped();
+                      }
+                    }}
+                  />
+                </div>
+                {query.trim() ? (
+                  <div className="stack-sm" style={{ gap: 2 }}>
+                    {suggestions.map((p) => (
+                      <div key={p.name} className="result">
+                        <button type="button" className="result-main" onClick={() => choose(p)}>
+                          <ItemThumb name={p.name} item={p.item} size={38} />
+                          <span className="grow">
+                            <span className="item-title">{p.name}</span>
+                            <span className="item-meta">
+                              {p.lastAmount
+                                ? `Last time ${app.fmt(p.lastAmount)}`
+                                : (p.item?.category ?? '')}
+                            </span>
+                          </span>
+                        </button>
+                      </div>
+                    ))}
+                    <div className="result">
+                      <button type="button" className="result-main" onClick={chooseTyped}>
+                        <span className="tile" style={{ width: 38, height: 38 }}>
+                          <Plus size={16} />
+                        </span>
+                        <span className="item-title">Use “{query.trim()}”</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    className="tiles"
+                    role="group"
+                    aria-label={frequent.length ? 'Your frequent purchases' : 'Common purchases'}
+                  >
+                    {shortcuts.map((p) => (
+                      <button
+                        key={p.name}
+                        type="button"
+                        className="tile-card"
+                        onClick={() => choose(p)}
+                      >
+                        <ItemThumb
+                          name={p.name}
+                          item={p.item}
+                          category={categoryById(p.category_id)}
+                          size={52}
+                        />
+                        <span>{p.name}</span>
+                        {p.lastAmount ? <small>{app.fmt(p.lastAmount)}</small> : null}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
+
+        <MoneyField
+          label={isRefund ? 'Refund amount' : 'How much?'}
+          value={amount}
+          onChange={setAmount}
+          autoFocus={picked && !editing}
+          big
+        />
 
         {(expense?.wishlist_item_id || expense?.fixed_bill_id) && (
           <div className="callout info">
@@ -221,7 +393,7 @@ export function ExpenseForm({ expense, onClose }: { expense?: Expense; onClose: 
 
         <details className="more" open={editing}>
           <summary>
-            Date, payment method and note <ChevronDown size={16} />
+            Date, payment and category <ChevronDown size={16} />
           </summary>
           <div className="stack" style={{ marginTop: 12 }}>
             <div className="form-grid">
@@ -237,7 +409,7 @@ export function ExpenseForm({ expense, onClose }: { expense?: Expense; onClose: 
                 />
               </div>
               <div className="field">
-                <label htmlFor="exp-method">Payment method</label>
+                <label htmlFor="exp-method">Paid by</label>
                 <select
                   id="exp-method"
                   className="input"
@@ -252,27 +424,23 @@ export function ExpenseForm({ expense, onClose }: { expense?: Expense; onClose: 
                 </select>
               </div>
             </div>
-            <div className="field">
-              <label htmlFor="exp-note">Note</label>
-              <input
-                id="exp-note"
-                className="input"
-                value={note}
-                maxLength={200}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="Optional, e.g. Weekly groceries"
-              />
-            </div>
             {!isRefund && (
-              <Segmented
-                label="Need or want"
-                value={effectiveType}
-                options={[
-                  { value: 'NEED', label: 'Need' },
-                  { value: 'WANT', label: 'Want' },
-                ]}
-                onChange={setType}
-              />
+              <div className="field">
+                <label htmlFor="exp-cat">Category</label>
+                <select
+                  id="exp-cat"
+                  className="input"
+                  value={categoryId ?? ''}
+                  onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : null)}
+                >
+                  <option value="">Choose automatically</option>
+                  {activeCategories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             )}
           </div>
         </details>
@@ -307,7 +475,7 @@ export function ExpenseForm({ expense, onClose }: { expense?: Expense; onClose: 
                       hint={
                         expense.refunded_cents
                           ? `Already refunded: ${app.fmt(expense.refunded_cents)}`
-                          : 'Money you got back for this expense'
+                          : 'Money you got back'
                       }
                     />
                     <button

@@ -1,4 +1,4 @@
-import { CalendarCheck, Heart, Leaf, Plus, ShoppingBag } from 'lucide-react';
+import { CalendarCheck, Heart, Leaf, Plus, ShoppingBag, SlidersHorizontal } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import {
   itemTotalCents,
@@ -8,6 +8,7 @@ import {
   type WishSort,
 } from '../../shared/finance';
 import { URGENCIES, type EntryType, type Urgency, type WishlistItem } from '../../shared/types';
+import { QuickSearch } from '../components/QuickSearch';
 import { EmptyState, ErrorBox, LoadingPanels } from '../components/ui';
 import { WishCard } from '../components/WishCard';
 import { useApp } from '../lib/context';
@@ -32,6 +33,7 @@ export function Wishlist() {
   const [categoryId, setCategoryId] = useState('');
   const [urgency, setUrgency] = useState<'' | Urgency>('');
   const [sort, setSort] = useState<WishSort>('score');
+  const [showFilters, setShowFilters] = useState(false);
 
   const cycleStart = cycle?.cycle.start ?? '';
   const safe = cycle?.safe_to_spend_cents ?? 0;
@@ -92,14 +94,8 @@ export function Wishlist() {
 
   return (
     <div className="stack">
-      <div className="toolbar">
-        <p className="text-2 small" style={{ maxWidth: 560 }}>
-          Your lifetime list of things to buy. Plan items into this month to set money aside, then
-          mark them bought to record the expense.
-        </p>
-        <button className="btn primary" onClick={() => openSheet({ kind: 'wish' })}>
-          <Plus size={17} /> Add item
-        </button>
+      <div className="hide-desktop">
+        <QuickSearch />
       </div>
 
       <section className="panel">
@@ -120,56 +116,78 @@ export function Wishlist() {
           ))}
         </div>
 
-        <div className="filters" aria-label="Filters">
-          <select
-            className="input"
-            aria-label="Filter by need or want"
-            value={type}
-            onChange={(e) => setType(e.target.value as '' | EntryType)}
+        <div
+          className="spread"
+          style={{ padding: '8px 20px', borderBottom: '1px solid var(--border)' }}
+        >
+          <span className="small muted">
+            {showScore
+              ? 'Most important first'
+              : tab === 'bought'
+                ? 'Newest purchases first'
+                : 'Most recent first'}
+          </span>
+          <button
+            type="button"
+            className={`btn sm ${showFilters ? '' : 'ghost'}`}
+            aria-expanded={showFilters}
+            onClick={() => setShowFilters((v) => !v)}
           >
-            <option value="">Needs and wants</option>
-            <option value="NEED">Needs only</option>
-            <option value="WANT">Wants only</option>
-          </select>
-          <select
-            className="input"
-            aria-label="Filter by category"
-            value={categoryId}
-            onChange={(e) => setCategoryId(e.target.value)}
-          >
-            <option value="">All categories</option>
-            {activeCategories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-          <select
-            className="input"
-            aria-label="Filter by urgency"
-            value={urgency}
-            onChange={(e) => setUrgency(e.target.value as '' | Urgency)}
-          >
-            <option value="">Any urgency</option>
-            {URGENCIES.map((u) => (
-              <option key={u} value={u}>
-                {URGENCY_LABEL[u]}
-              </option>
-            ))}
-          </select>
-          {showScore && (
+            <SlidersHorizontal size={15} /> Filter
+          </button>
+        </div>
+        {showFilters && (
+          <div className="filters" aria-label="Filters">
             <select
               className="input"
-              aria-label="Sort by"
-              value={sort}
-              onChange={(e) => setSort(e.target.value as WishSort)}
+              aria-label="Filter by need or want"
+              value={type}
+              onChange={(e) => setType(e.target.value as '' | EntryType)}
             >
-              <option value="score">Sort by priority</option>
-              <option value="price">Sort by price</option>
-              <option value="date">Sort by newest</option>
+              <option value="">Needs and wants</option>
+              <option value="NEED">Needs only</option>
+              <option value="WANT">Wants only</option>
             </select>
-          )}
-        </div>
+            <select
+              className="input"
+              aria-label="Filter by category"
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+            >
+              <option value="">All categories</option>
+              {activeCategories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+            <select
+              className="input"
+              aria-label="Filter by urgency"
+              value={urgency}
+              onChange={(e) => setUrgency(e.target.value as '' | Urgency)}
+            >
+              <option value="">Any urgency</option>
+              {URGENCIES.map((u) => (
+                <option key={u} value={u}>
+                  {URGENCY_LABEL[u]}
+                </option>
+              ))}
+            </select>
+            {showScore && (
+              <select
+                className="input"
+                aria-label="Sort by"
+                value={sort}
+                onChange={(e) => setSort(e.target.value as WishSort)}
+              >
+                <option value="score">Sort by priority</option>
+                <option value="price">Sort by price</option>
+                <option value="date">Sort by newest</option>
+              </select>
+            )}
+          </div>
+        )}
 
         {error && (
           <div className="panel-body">
@@ -194,10 +212,10 @@ export function Wishlist() {
             }
             text={
               tab === 'month'
-                ? 'Open an idea’s menu and choose "Plan for this month" to set its price aside.'
+                ? 'Use ⋯ on an item and choose "Plan for this month" to set money aside for it.'
                 : tab === 'dropped'
                   ? 'Dropping a want you no longer need counts as money saved.'
-                  : 'Add anything you would like to buy. Only the name is needed.'
+                  : 'Search above and tap Add – that is all.'
             }
             action={
               tab === 'ideas' ? (

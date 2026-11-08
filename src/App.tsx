@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Logo, LogoMark } from './components/Logo';
+import { QuickSearch } from './components/QuickSearch';
 import { RolloverSheet } from './components/RolloverSheet';
 import { ErrorBox, LoadingPanels } from './components/ui';
 import { api } from './lib/api';
@@ -179,6 +180,9 @@ export function App() {
           <div className="topbar-title">
             <h1>{current.title}</h1>
             <p>{cycleLabel}</p>
+          </div>
+          <div className="hide-mobile grow" style={{ display: 'flex', justifyContent: 'center' }}>
+            <QuickSearch />
           </div>
           <button
             className="icon-btn"

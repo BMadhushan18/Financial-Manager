@@ -1,0 +1,446 @@
+{
+  "rice": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/af/Half_a_cup_of_rice._Brown_rice_is_the_best_choice.JPG/330px-Half_a_cup_of_rice._Brown_rice_is_the_best_choice.JPG",
+    "page": "https://en.wikipedia.org/wiki/White_rice"
+  },
+  "dhal": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f5/3_types_of_lentil.png/330px-3_types_of_lentil.png",
+    "page": "https://en.wikipedia.org/wiki/Lentil"
+  },
+  "bread": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c7/Korb_mit_Br%C3%B6tchen.JPG/330px-Korb_mit_Br%C3%B6tchen.JPG",
+    "page": "https://en.wikipedia.org/wiki/Bread"
+  },
+  "eggs": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3f/Huevo_frito.jpg/330px-Huevo_frito.jpg",
+    "page": "https://en.wikipedia.org/wiki/Eggs_as_food"
+  },
+  "milk-powder": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b9/Milk_powder_cropped.jpg/330px-Milk_powder_cropped.jpg",
+    "page": "https://en.wikipedia.org/wiki/Powdered_milk"
+  },
+  "milk": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a5/Glass_of_Milk_%2833657535532%29.jpg/330px-Glass_of_Milk_%2833657535532%29.jpg",
+    "page": "https://en.wikipedia.org/wiki/Milk"
+  },
+  "coconut": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/32/Cocos_nucifera_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-187.jpg/330px-Cocos_nucifera_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen-187.jpg",
+    "page": "https://en.wikipedia.org/wiki/Coconut"
+  },
+  "vegetables": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/24/Marketvegetables.jpg/330px-Marketvegetables.jpg",
+    "page": "https://en.wikipedia.org/wiki/Vegetable"
+  },
+  "fruits": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/35/Fruit_Platter-_Seasonal_Fruits.jpg/330px-Fruit_Platter-_Seasonal_Fruits.jpg",
+    "page": "https://en.wikipedia.org/wiki/Fruit"
+  },
+  "fish": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/19/Fish_stuffed_with_Thai_herbs.jpg/330px-Fish_stuffed_with_Thai_herbs.jpg",
+    "page": "https://en.wikipedia.org/wiki/Fish_as_food"
+  },
+  "chicken": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/57/Chickens_in_market.jpg/330px-Chickens_in_market.jpg",
+    "page": "https://en.wikipedia.org/wiki/Chicken_as_food"
+  },
+  "sugar": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3c/Sucre_blanc_cassonade_complet_rapadura.jpg/330px-Sucre_blanc_cassonade_complet_rapadura.jpg",
+    "page": "https://en.wikipedia.org/wiki/Sugar"
+  },
+  "tea": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d3/Longjing_tea_steeping_in_gaiwan.jpg/330px-Longjing_tea_steeping_in_gaiwan.jpg",
+    "page": "https://en.wikipedia.org/wiki/Tea"
+  },
+  "cooking-oil": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/49/Olive_oil_from_Oneglia.jpg/330px-Olive_oil_from_Oneglia.jpg",
+    "page": "https://en.wikipedia.org/wiki/Cooking_oil"
+  },
+  "flour": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0e/Soy_powder.jpg/330px-Soy_powder.jpg",
+    "page": "https://en.wikipedia.org/wiki/Flour"
+  },
+  "onions": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a2/Mixed_onions.jpg/330px-Mixed_onions.jpg",
+    "page": "https://en.wikipedia.org/wiki/Onion"
+  },
+  "potatoes": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ab/Patates.jpg/330px-Patates.jpg",
+    "page": "https://en.wikipedia.org/wiki/Potato"
+  },
+  "spices": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b6/Spices1.jpg/330px-Spices1.jpg",
+    "page": "https://en.wikipedia.org/wiki/Spice"
+  },
+  "groceries": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/70/Westside_Market_in_Manhattan%2C_NYC_IMG_5615.JPG/330px-Westside_Market_in_Manhattan%2C_NYC_IMG_5615.JPG",
+    "page": "https://en.wikipedia.org/wiki/Grocery_store"
+  },
+  "water-bottle": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/ce/Water_Bottle_%2851308317077%29.jpg/330px-Water_Bottle_%2851308317077%29.jpg",
+    "page": "https://en.wikipedia.org/wiki/Bottled_water"
+  },
+  "fuel": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/93/Mattoon_Service_Station_%28pre-fabricated%29%2C_angle_view%2C_National_%26_Washington_Boulevards%2C_Culver_City%2C_California_LOC_37555778230.jpg/330px-Mattoon_Service_Station_%28pre-fabricated%29%2C_angle_view%2C_National_%26_Washington_Boulevards%2C_Culver_City%2C_California_LOC_37555778230.jpg",
+    "page": "https://en.wikipedia.org/wiki/Filling_station"
+  },
+  "bus": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/84/LTZ1328-19-20241030-160332.jpg/330px-LTZ1328-19-20241030-160332.jpg",
+    "page": "https://en.wikipedia.org/wiki/Bus"
+  },
+  "train": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/50/%D0%9F%D0%BE%D0%B5%D0%B7%D0%B4_%D0%BD%D0%B0_%D1%84%D0%BE%D0%BD%D0%B5_%D0%B3%D0%BE%D1%80%D1%8B_%D0%A8%D0%B0%D1%82%D1%80%D0%B8%D1%89%D0%B5._%D0%92%D0%BE%D1%80%D0%BE%D0%BD%D0%B5%D0%B6%D1%81%D0%BA%D0%B0%D1%8F_%D0%BE%D0%B1%D0%BB%D0%B0%D1%81%D1%82%D1%8C.jpg/330px-%D0%9F%D0%BE%D0%B5%D0%B7%D0%B4_%D0%BD%D0%B0_%D1%84%D0%BE%D0%BD%D0%B5_%D0%B3%D0%BE%D1%80%D1%8B_%D0%A8%D0%B0%D1%82%D1%80%D0%B8%D1%89%D0%B5._%D0%92%D0%BE%D1%80%D0%BE%D0%BD%D0%B5%D0%B6%D1%81%D0%BA%D0%B0%D1%8F_%D0%BE%D0%B1%D0%BB%D0%B0%D1%81%D1%82%D1%8C.jpg",
+    "page": "https://en.wikipedia.org/wiki/Train"
+  },
+  "tuk": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/49/Bajaj_auto-rickshaw_in_Sri_Lanka.jpg/330px-Bajaj_auto-rickshaw_in_Sri_Lanka.jpg",
+    "page": "https://en.wikipedia.org/wiki/Auto_rickshaw"
+  },
+  "taxi": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/03/TAXI.jpg/330px-TAXI.jpg",
+    "page": "https://en.wikipedia.org/wiki/Taxi"
+  },
+  "bike-service": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/50/Istockphoto-114285168-612x612.jpg/330px-Istockphoto-114285168-612x612.jpg",
+    "page": "https://en.wikipedia.org/wiki/Motorcycle"
+  },
+  "tyres": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/99/Large_tyre.jpg/330px-Large_tyre.jpg",
+    "page": "https://en.wikipedia.org/wiki/Tire"
+  },
+  "helmet": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e0/Valentino_Rossi%27s_AGV_helmets.jpg/330px-Valentino_Rossi%27s_AGV_helmets.jpg",
+    "page": "https://en.wikipedia.org/wiki/Motorcycle_helmet"
+  },
+  "parking": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f3/Parking_lot_in_Ayyappa_society.jpg/330px-Parking_lot_in_Ayyappa_society.jpg",
+    "page": "https://en.wikipedia.org/wiki/Parking_space"
+  },
+  "car-wash": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7c/2015_K%C5%82odzko%2C_ul._Dusznicka%2C_myjnia_samochodowa_02.jpg/330px-2015_K%C5%82odzko%2C_ul._Dusznicka%2C_myjnia_samochodowa_02.jpg",
+    "page": "https://en.wikipedia.org/wiki/Car_wash"
+  },
+  "medicine": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/65/12-08-18-tilidin-retard.jpg/330px-12-08-18-tilidin-retard.jpg",
+    "page": "https://en.wikipedia.org/wiki/Medication"
+  },
+  "doctor": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d2/Stethoscope-2.png/330px-Stethoscope-2.png",
+    "page": "https://en.wikipedia.org/wiki/Stethoscope"
+  },
+  "vitamins": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f1/Iodine_pills.jpg/330px-Iodine_pills.jpg",
+    "page": "https://en.wikipedia.org/wiki/Dietary_supplement"
+  },
+  "glasses": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d7/2023_Okulary_korekcyjne.jpg/330px-2023_Okulary_korekcyjne.jpg",
+    "page": "https://en.wikipedia.org/wiki/Glasses"
+  },
+  "dentist": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/db/GI_at_Guantanamo_visits_the_dentist.JPG/330px-GI_at_Guantanamo_visits_the_dentist.JPG",
+    "page": "https://en.wikipedia.org/wiki/Dentistry"
+  },
+  "first-aid": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/62/British_Red_Cross_First_Aid_Kits.jpg/330px-British_Red_Cross_First_Aid_Kits.jpg",
+    "page": "https://en.wikipedia.org/wiki/First_aid_kit"
+  },
+  "electricity": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/69/Yipwm_1b_%287691592010%29.jpg/330px-Yipwm_1b_%287691592010%29.jpg",
+    "page": "https://en.wikipedia.org/wiki/Electricity_meter"
+  },
+  "water-bill": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2c/Water_meter_2006.jpg/330px-Water_meter_2006.jpg",
+    "page": "https://en.wikipedia.org/wiki/Water_metering"
+  },
+  "gas-cylinder": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3b/Compressed_gas_cylinders.mapp_and_oxygen.triddle.jpg/330px-Compressed_gas_cylinders.mapp_and_oxygen.triddle.jpg",
+    "page": "https://en.wikipedia.org/wiki/Gas_cylinder"
+  },
+  "rent": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/da/Nordisches_Einfamilienhaus.jpg/330px-Nordisches_Einfamilienhaus.jpg",
+    "page": "https://en.wikipedia.org/wiki/Single-family_detached_home"
+  },
+  "reload": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3c/SIM-Karte_von_Telef%C3%B3nica_O2_Europe_-_Standard_und_Micro.jpg/330px-SIM-Karte_von_Telef%C3%B3nica_O2_Europe_-_Standard_und_Micro.jpg",
+    "page": "https://en.wikipedia.org/wiki/SIM_card"
+  },
+  "internet": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/91/D-Link_DI-524.jpg/330px-D-Link_DI-524.jpg",
+    "page": "https://en.wikipedia.org/wiki/Wireless_router"
+  },
+  "school-fees": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ed/%D0%A8%D0%BA%D0%BE%D0%BB%D0%B0_%E2%84%962_%D0%B3._%D0%9A%D1%80%D0%B0%D1%81%D0%BD%D0%BE%D1%82%D1%83%D1%80%D1%8C%D0%B8%D0%BD%D1%81%D0%BA%D0%B0.jpg/330px-%D0%A8%D0%BA%D0%BE%D0%BB%D0%B0_%E2%84%962_%D0%B3._%D0%9A%D1%80%D0%B0%D1%81%D0%BD%D0%BE%D1%82%D1%83%D1%80%D1%8C%D0%B8%D0%BD%D1%81%D0%BA%D0%B0.jpg",
+    "page": "https://en.wikipedia.org/wiki/School"
+  },
+  "tuition": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/ce/Elementary_classroom_in_Alaska.jpg/330px-Elementary_classroom_in_Alaska.jpg",
+    "page": "https://en.wikipedia.org/wiki/Classroom"
+  },
+  "books": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b6/Gutenberg_Bible%2C_Lenox_Copy%2C_New_York_Public_Library%2C_2009._Pic_01.jpg/330px-Gutenberg_Bible%2C_Lenox_Copy%2C_New_York_Public_Library%2C_2009._Pic_01.jpg",
+    "page": "https://en.wikipedia.org/wiki/Book"
+  },
+  "stationery": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a9/Stationery_at_a_shop_in_HiroshimaP1010373.jpg/330px-Stationery_at_a_shop_in_HiroshimaP1010373.jpg",
+    "page": "https://en.wikipedia.org/wiki/Stationery"
+  },
+  "uniform": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a3/Students_of_Nan_Hua_High_School%2C_Singapore%2C_in_the_school_hall_-_20060127.jpg/330px-Students_of_Nan_Hua_High_School%2C_Singapore%2C_in_the_school_hall_-_20060127.jpg",
+    "page": "https://en.wikipedia.org/wiki/School_uniform"
+  },
+  "school-bag": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d7/Rucksack1.jpg/330px-Rucksack1.jpg",
+    "page": "https://en.wikipedia.org/wiki/Backpack"
+  },
+  "course": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a2/Interactive_whiteboard_at_CeBIT_2007.jpg/330px-Interactive_whiteboard_at_CeBIT_2007.jpg",
+    "page": "https://en.wikipedia.org/wiki/Educational_technology"
+  },
+  "soap": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9b/Handmade_soap_cropped_and_simplified.jpg/330px-Handmade_soap_cropped_and_simplified.jpg",
+    "page": "https://en.wikipedia.org/wiki/Soap"
+  },
+  "toothpaste": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/49/Toothpasteonbrush.jpg/330px-Toothpasteonbrush.jpg",
+    "page": "https://en.wikipedia.org/wiki/Toothpaste"
+  },
+  "shampoo": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7f/Hair_wash_with_shampoo.jpg/330px-Hair_wash_with_shampoo.jpg",
+    "page": "https://en.wikipedia.org/wiki/Shampoo"
+  },
+  "detergent": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2a/Pralni_pra%C5%A1ek.JPG/330px-Pralni_pra%C5%A1ek.JPG",
+    "page": "https://en.wikipedia.org/wiki/Laundry_detergent"
+  },
+  "diapers": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d8/Disposablediaper.JPG/330px-Disposablediaper.JPG",
+    "page": "https://en.wikipedia.org/wiki/Diaper"
+  },
+  "toilet-paper": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a5/Toiletpapier_%28Gobran111%29.jpg/330px-Toiletpapier_%28Gobran111%29.jpg",
+    "page": "https://en.wikipedia.org/wiki/Toilet_paper"
+  },
+  "rice-cooker": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d6/Rice_Cooker_1.png/330px-Rice_Cooker_1.png",
+    "page": "https://en.wikipedia.org/wiki/Rice_cooker"
+  },
+  "fridge": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7b/Open_refrigerator_with_food_at_night.jpg/330px-Open_refrigerator_with_food_at_night.jpg",
+    "page": "https://en.wikipedia.org/wiki/Refrigerator"
+  },
+  "fan": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1a/Hatari_18_inch_fan.jpg/330px-Hatari_18_inch_fan.jpg",
+    "page": "https://en.wikipedia.org/wiki/Fan_(machine)"
+  },
+  "washing-machine": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ec/LG_%EB%93%9C%EB%9F%BC%EC%84%B8%ED%83%81%EA%B8%B0%EC%99%80_%EC%8B%9D%EA%B8%B0%EC%84%B8%EC%B2%99%EA%B8%B0%2C_%EC%98%81%EA%B5%AD%EC%84%9C_%EB%AC%BC%EC%82%AC%EC%9A%A9_%ED%9A%A8%EC%9C%A8_%EC%B5%9C%EC%9A%B0%EC%88%98_%EC%A0%9C%ED%92%88_%EC%88%98%EC%83%81.jpg/330px-LG_%EB%93%9C%EB%9F%BC%EC%84%B8%ED%83%81%EA%B8%B0%EC%99%80_%EC%8B%9D%EA%B8%B0%EC%84%B8%EC%B2%99%EA%B8%B0%2C_%EC%98%81%EA%B5%AD%EC%84%9C_%EB%AC%BC%EC%82%AC%EC%9A%A9_%ED%9A%A8%EC%9C%A8_%EC%B5%9C%EC%9A%B0%EC%88%98_%EC%A0%9C%ED%92%88_%EC%88%98%EC%83%81.jpg",
+    "page": "https://en.wikipedia.org/wiki/Washing_machine"
+  },
+  "mattress": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bb/Shifman_Mattress_Set.JPG/330px-Shifman_Mattress_Set.JPG",
+    "page": "https://en.wikipedia.org/wiki/Mattress"
+  },
+  "office-chair": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4b/Desk_chair.jpg/330px-Desk_chair.jpg",
+    "page": "https://en.wikipedia.org/wiki/Office_chair"
+  },
+  "blender": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/dd/Vitamix_Blender.jpg/330px-Vitamix_Blender.jpg",
+    "page": "https://en.wikipedia.org/wiki/Blender_(appliance)"
+  },
+  "kettle": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c8/Bernadotte_Wasserkessel.jpg/330px-Bernadotte_Wasserkessel.jpg",
+    "page": "https://en.wikipedia.org/wiki/Kettle"
+  },
+  "bulbs": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e1/Led-lampa.jpg/330px-Led-lampa.jpg",
+    "page": "https://en.wikipedia.org/wiki/LED_lamp"
+  },
+  "haircut": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/61/Iranian_barber.jpg/330px-Iranian_barber.jpg",
+    "page": "https://en.wikipedia.org/wiki/Barber"
+  },
+  "restaurant": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/62/Barbieri_-_ViaSophia25668.jpg/330px-Barbieri_-_ViaSophia25668.jpg",
+    "page": "https://en.wikipedia.org/wiki/Restaurant"
+  },
+  "coffee": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e4/Latte_and_dark_coffee.jpg/330px-Latte_and_dark_coffee.jpg",
+    "page": "https://en.wikipedia.org/wiki/Coffee"
+  },
+  "kottu": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a3/Chicken_Kottu.jpg/330px-Chicken_Kottu.jpg",
+    "page": "https://en.wikipedia.org/wiki/Kottu"
+  },
+  "pizza": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/91/Pizza-3007395.jpg/330px-Pizza-3007395.jpg",
+    "page": "https://en.wikipedia.org/wiki/Pizza"
+  },
+  "burger": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0b/RedDot_Burger.jpg/330px-RedDot_Burger.jpg",
+    "page": "https://en.wikipedia.org/wiki/Hamburger"
+  },
+  "ice-cream": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f3/Vanilla_Ice_Cream_Cone_at_Camp_Manitoulin.jpg/330px-Vanilla_Ice_Cream_Cone_at_Camp_Manitoulin.jpg",
+    "page": "https://en.wikipedia.org/wiki/Ice_cream"
+  },
+  "cake": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/04/Pound_layer_cake.jpg/330px-Pound_layer_cake.jpg",
+    "page": "https://en.wikipedia.org/wiki/Cake"
+  },
+  "short-eats": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c4/Samosas%2C_snack_food_at_Wikipedia%27s_16th_Birthday_celebration_in_Chittagong_%2801%29.jpg/330px-Samosas%2C_snack_food_at_Wikipedia%27s_16th_Birthday_celebration_in_Chittagong_%2801%29.jpg",
+    "page": "https://en.wikipedia.org/wiki/Samosa"
+  },
+  "movie": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ef/Projecteur_cin%C3%A9matographique_35mm.jpg/330px-Projecteur_cin%C3%A9matographique_35mm.jpg",
+    "page": "https://en.wikipedia.org/wiki/Movie_projector"
+  },
+  "concert": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a7/D%C3%BClmen%2C_D%C3%BClmener_Sommer%2C_Open-Air-Konzert%2C_%22Bounce%22_--_2018_--_0051.jpg/330px-D%C3%BClmen%2C_D%C3%BClmener_Sommer%2C_Open-Air-Konzert%2C_%22Bounce%22_--_2018_--_0051.jpg",
+    "page": "https://en.wikipedia.org/wiki/Concert"
+  },
+  "cricket-match": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7a/Pollock_to_Hussey.jpg/330px-Pollock_to_Hussey.jpg",
+    "page": "https://en.wikipedia.org/wiki/Cricket"
+  },
+  "netflix": {
+    "src": "https://thumb.wikimedia.org/wikipedia/en/thumb/3/3c/Netflix_UI_for_Web.png/330px-Netflix_UI_for_Web.png",
+    "page": "https://en.wikipedia.org/wiki/Netflix"
+  },
+  "spotify": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/10/Spotify_HK_Stockholm.jpg/330px-Spotify_HK_Stockholm.jpg",
+    "page": "https://en.wikipedia.org/wiki/Spotify"
+  },
+  "gym": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e3/TwoDumbbells.JPG/330px-TwoDumbbells.JPG",
+    "page": "https://en.wikipedia.org/wiki/Dumbbell"
+  },
+  "smartphone": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/66/Wikipedia_homepage_on_a_large_Android_phone%2C_2015-04-16.jpg/330px-Wikipedia_homepage_on_a_large_Android_phone%2C_2015-04-16.jpg",
+    "page": "https://en.wikipedia.org/wiki/Smartphone"
+  },
+  "headphones": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/00/S%C5%82uchawki_referencyjne_K-701_firmy_AKG.jpg/330px-S%C5%82uchawki_referencyjne_K-701_firmy_AKG.jpg",
+    "page": "https://en.wikipedia.org/wiki/Headphones"
+  },
+  "earbuds": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/14/AirPods_4_ANC_and_case.jpg/330px-AirPods_4_ANC_and_case.jpg",
+    "page": "https://en.wikipedia.org/wiki/AirPods"
+  },
+  "laptop": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/68/Laptop_collage.jpg/330px-Laptop_collage.jpg",
+    "page": "https://en.wikipedia.org/wiki/Laptop"
+  },
+  "smartwatch": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b8/Samsung_Galaxy_Watch.jpg/330px-Samsung_Galaxy_Watch.jpg",
+    "page": "https://en.wikipedia.org/wiki/Smartwatch"
+  },
+  "tablet": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/db/12.9_iPad_Pro_1st_Gen_And_Galaxy_Tab_S8_Ultra_Size_Comparison.jpg/330px-12.9_iPad_Pro_1st_Gen_And_Galaxy_Tab_S8_Ultra_Size_Comparison.jpg",
+    "page": "https://en.wikipedia.org/wiki/Tablet_computer"
+  },
+  "tv": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6f/Museum_f%C3%BCr_Kommunikation_-_Depot_Heusenstamm_-_Technik_12_-_Flickr_-_KlausNahr.jpg/330px-Museum_f%C3%BCr_Kommunikation_-_Depot_Heusenstamm_-_Technik_12_-_Flickr_-_KlausNahr.jpg",
+    "page": "https://en.wikipedia.org/wiki/Television_set"
+  },
+  "camera": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/99/Canon_PowerShot_A95_-_front_and_back.jpg/330px-Canon_PowerShot_A95_-_front_and_back.jpg",
+    "page": "https://en.wikipedia.org/wiki/Digital_camera"
+  },
+  "console": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d5/Nintendo-Switch-Pro-Controller-FL.jpg/330px-Nintendo-Switch-Pro-Controller-FL.jpg",
+    "page": "https://en.wikipedia.org/wiki/Gamepad"
+  },
+  "speaker": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/67/JBL_Flip_3_bluetooth_speaker_%28DSCF2653%29.jpg/330px-JBL_Flip_3_bluetooth_speaker_%28DSCF2653%29.jpg",
+    "page": "https://en.wikipedia.org/wiki/Wireless_speaker"
+  },
+  "keyboard": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e6/Typing_example.ogv/330px--Typing_example.ogv.jpg",
+    "page": "https://en.wikipedia.org/wiki/Computer_keyboard"
+  },
+  "shoes": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/00/Skor_fr%C3%A5n_1700-_till_1960-talet_-_Nordiska_Museet_-_NMA.0056302.jpg/330px-Skor_fr%C3%A5n_1700-_till_1960-talet_-_Nordiska_Museet_-_NMA.0056302.jpg",
+    "page": "https://en.wikipedia.org/wiki/Shoe"
+  },
+  "running-shoes": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/59/Air_Jordan_1_Banned.jpg/330px-Air_Jordan_1_Banned.jpg",
+    "page": "https://en.wikipedia.org/wiki/Sneakers"
+  },
+  "shirt": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/01/Charvet_shirt.jpg/330px-Charvet_shirt.jpg",
+    "page": "https://en.wikipedia.org/wiki/Shirt"
+  },
+  "t-shirt": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/03/Woman_in_a_V-Neck_T-Shirt.jpg/330px-Woman_in_a_V-Neck_T-Shirt.jpg",
+    "page": "https://en.wikipedia.org/wiki/T-shirt"
+  },
+  "jeans": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5a/Jeans.jpg/330px-Jeans.jpg",
+    "page": "https://en.wikipedia.org/wiki/Jeans"
+  },
+  "dress": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f6/Afternoon_ensemble_MET_63.212a-b_CP4.jpg/330px-Afternoon_ensemble_MET_63.212a-b_CP4.jpg",
+    "page": "https://en.wikipedia.org/wiki/Dress"
+  },
+  "saree": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/44/Sari_on_mannequin_for_demo.jpg/330px-Sari_on_mannequin_for_demo.jpg",
+    "page": "https://en.wikipedia.org/wiki/Sari"
+  },
+  "handbag": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/Mi%27kmaq_porcupine_quill_purse_%2840412695490%29.jpg/330px-Mi%27kmaq_porcupine_quill_purse_%2840412695490%29.jpg",
+    "page": "https://en.wikipedia.org/wiki/Handbag"
+  },
+  "watch": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d9/Rolex_Oyster_Perpetual_with_a_%22Jubliee%22_dial.jpg/330px-Rolex_Oyster_Perpetual_with_a_%22Jubliee%22_dial.jpg",
+    "page": "https://en.wikipedia.org/wiki/Watch"
+  },
+  "sunglasses": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/89/Allef_Vinicius_2016-10-20_%28Unsplash%29_%28cropped%29.jpg/330px-Allef_Vinicius_2016-10-20_%28Unsplash%29_%28cropped%29.jpg",
+    "page": "https://en.wikipedia.org/wiki/Sunglasses"
+  },
+  "perfume": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/db/Bottles_of_Eau_de_Toilette.jpg/330px-Bottles_of_Eau_de_Toilette.jpg",
+    "page": "https://en.wikipedia.org/wiki/Eau_de_toilette"
+  },
+  "guitar": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/45/GuitareClassique5.png/330px-GuitareClassique5.png",
+    "page": "https://en.wikipedia.org/wiki/Guitar"
+  },
+  "bicycle": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/41/Left_side_of_Flying_Pigeon.jpg/330px-Left_side_of_Flying_Pigeon.jpg",
+    "page": "https://en.wikipedia.org/wiki/Bicycle"
+  },
+  "football": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/06/Adidas_Trionda_ball.jpg/330px-Adidas_Trionda_ball.jpg",
+    "page": "https://en.wikipedia.org/wiki/Ball_(association_football)"
+  },
+  "board-game": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/97/US_Navy_110713-N-NT881-124_Personnel_Specialist_2nd_Class_James_Vail%2C_left%2C_and_Boatswain%27s_Mate_2nd_Class_Nathaniel_Eaton_play_board_games_with_ch.jpg/330px-US_Navy_110713-N-NT881-124_Personnel_Specialist_2nd_Class_James_Vail%2C_left%2C_and_Boatswain%27s_Mate_2nd_Class_Nathaniel_Eaton_play_board_games_with_ch.jpg",
+    "page": "https://en.wikipedia.org/wiki/Board_game"
+  },
+  "gift": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/04/Prezenty_EXP_096_%28ubt%29.JPG/330px-Prezenty_EXP_096_%28ubt%29.JPG",
+    "page": "https://en.wikipedia.org/wiki/Gift"
+  },
+  "flowers": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e6/Rosa_rubiginosa_1.jpg/330px-Rosa_rubiginosa_1.jpg",
+    "page": "https://en.wikipedia.org/wiki/Rose"
+  },
+  "chocolates": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/11/Three_Bars_%281%29.jpg/330px-Three_Bars_%281%29.jpg",
+    "page": "https://en.wikipedia.org/wiki/Chocolate"
+  },
+  "trip": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/47/Ella_railway_station.jpg/330px-Ella_railway_station.jpg",
+    "page": "https://en.wikipedia.org/wiki/Ella%2C_Sri_Lanka"
+  },
+  "hotel": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/36/Livorno_-_Hotel_Palazzo_-_2025-09-29_20-09-38_001.jpg/330px-Livorno_-_Hotel_Palazzo_-_2025-09-29_20-09-38_001.jpg",
+    "page": "https://en.wikipedia.org/wiki/Hotel"
+  },
+  "flight": {
+    "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/83/United_A320_N405UA_at_BOS_%2833787222465%29.jpg/330px-United_A320_N405UA_at_BOS_%2833787222465%29.jpg",
+    "page": "https://en.wikipedia.org/wiki/Airliner"
+  }
+}

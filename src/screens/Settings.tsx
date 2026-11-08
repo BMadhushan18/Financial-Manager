@@ -13,7 +13,10 @@ import {
   Upload,
   UserRound,
 } from 'lucide-react';
+import { Image as ImageIcon } from 'lucide-react';
 import { useRef, useState } from 'react';
+import { CATALOG, catalogCredit } from '../../shared/catalog';
+import { ItemThumb } from '../components/ItemThumb';
 import { CURRENCIES } from '../../shared/defaults';
 import { centsToInput, parseMoneyToCents } from '../../shared/finance';
 import type { Category, CycleMode, EntryType, Settings as SettingsT } from '../../shared/types';
@@ -53,6 +56,7 @@ export function Settings() {
   });
   const [error, setError] = useState<string | null>(null);
   const [pwSheet, setPwSheet] = useState(false);
+  const [credits, setCredits] = useState(false);
   const [catSheet, setCatSheet] = useState<Category | 'new' | null>(null);
   const [billSheet, setBillSheet] = useState<number | 'new' | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -495,11 +499,49 @@ export function Settings() {
         </section>
       </div>
 
+      <button
+        type="button"
+        className="btn ghost sm"
+        style={{ alignSelf: 'center' }}
+        onClick={() => setCredits(true)}
+      >
+        <ImageIcon size={15} /> Item photo credits
+      </button>
+
       <p className="disclaimer">
         MoneyMind provides guidance, not financial advice. Your data is stored in your own
         Cloudflare account.
       </p>
 
+      {credits && (
+        <Sheet
+          title="Item photo credits"
+          subtitle="Photos from Wikipedia / Wikimedia Commons"
+          onClose={() => setCredits(false)}
+        >
+          <p className="small text-2" style={{ marginBottom: 12 }}>
+            Item photos are lead images of Wikipedia articles, hosted by Wikimedia Commons and used
+            under their free licences (public domain, CC BY or CC BY-SA). Open an article to see the
+            photographer and licence.
+          </p>
+          <ul className="rows panel">
+            {CATALOG.filter((c) => catalogCredit(c)).map((c) => (
+              <li key={c.id} className="item" style={{ minHeight: 48 }}>
+                <ItemThumb item={c} size={32} />
+                <span className="grow small">{c.name}</span>
+                <a
+                  className="small"
+                  href={catalogCredit(c)!}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                >
+                  {c.wiki}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </Sheet>
+      )}
       {pwSheet && (
         <Sheet
           title="Change password"

@@ -13,17 +13,17 @@ import { itemTotalCents } from '../../shared/finance';
 import type { WishlistItem } from '../../shared/types';
 import { useWishActions } from '../lib/actions';
 import { useApp } from '../lib/context';
-import { daysOnList, formatShort, URGENCY_LABEL } from '../lib/labels';
-import { CategoryIcon } from './CategoryIcon';
+import { daysOnList, formatShort } from '../lib/labels';
+import { ItemThumb } from './ItemThumb';
 import { Badge, Menu, TypeBadge, type MenuItem } from './ui';
 
 /** One wishlist item as a row inside a panel. */
 export function WishCard({
   item,
-  score,
   label,
 }: {
   item: WishlistItem;
+  /** Kept for callers; the number itself is no longer shown. */
   score?: number;
   label?: string;
 }) {
@@ -103,21 +103,7 @@ export function WishCard({
 
   return (
     <article className="wish" aria-label={item.name}>
-      {score !== undefined ? (
-        <div
-          className={`score ${score >= 70 ? 'high' : ''}`}
-          title="Priority score (0–100)"
-          aria-label={`Priority score ${score} of 100`}
-        >
-          {score}
-        </div>
-      ) : (
-        <CategoryIcon
-          icon={category?.icon}
-          name={category?.name ?? item.name}
-          color={category?.color}
-        />
-      )}
+      <ItemThumb name={item.name} category={category} size={52} />
 
       <div className="wish-body">
         <button className="wish-title" onClick={() => openSheet({ kind: 'wish', item })}>
@@ -127,7 +113,6 @@ export function WishCard({
         <div className="wish-badges">
           <TypeBadge type={item.type} />
           {label && <Badge tone="brand">{label}</Badge>}
-          {isActive && <Badge tone="outline">{URGENCY_LABEL[item.urgency]}</Badge>}
           {plannedNow && (
             <Badge tone="success" dot>
               Planned this month

@@ -1,5 +1,6 @@
 import { ChevronRight, Heart, Receipt, Wallet, type LucideIcon } from 'lucide-react';
 import { useApp, type SheetState } from '../../lib/context';
+import { QuickSearch } from '../QuickSearch';
 import { Sheet } from '../ui';
 import { BoughtForm } from './BoughtForm';
 import { ExpenseForm } from './ExpenseForm';
@@ -72,8 +73,19 @@ export function SheetHost() {
         </Sheet>
       );
     case 'expense':
-      return <ExpenseForm expense={sheet.expense} onClose={closeSheet} />;
+      return <ExpenseForm expense={sheet.expense} prefill={sheet.prefill} onClose={closeSheet} />;
     case 'wish':
+      if (!sheet.item) {
+        return (
+          <Sheet
+            title="Add to your wishlist"
+            subtitle="Type an item, then tap Add. That is it."
+            onClose={closeSheet}
+          >
+            <QuickSearch inline autoFocus />
+          </Sheet>
+        );
+      }
       return <WishForm item={sheet.item} onClose={closeSheet} />;
     case 'income':
       return <IncomeForm income={sheet.income} onClose={closeSheet} />;

@@ -13,7 +13,7 @@ import type {
 
 export type SheetState =
   | { kind: 'add-menu' }
-  | { kind: 'expense'; expense?: Expense }
+  | { kind: 'expense'; expense?: Expense; prefill?: { note: string; category_id: number | null } }
   | { kind: 'wish'; item?: WishlistItem }
   | { kind: 'income'; income?: IncomeEntry }
   | { kind: 'bought'; item: WishlistItem }
