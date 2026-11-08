@@ -14,7 +14,7 @@ export default defineConfig({
   build: {
     target: 'es2020',
     sourcemap: false,
-    chunkSizeWarningLimit: 350,
+    chunkSizeWarningLimit: 400,
   },
   test: {
     include: ['shared/**/*.test.ts'],

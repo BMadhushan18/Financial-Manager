@@ -14,8 +14,6 @@ import {
 import { useState } from 'react';
 import type { BillInCycle, Expense } from '../../shared/types';
 import { CategoryIcon } from '../components/CategoryIcon';
-import { ItemThumb } from '../components/ItemThumb';
-import { QuickSearch } from '../components/QuickSearch';
 import { Badge, EmptyState, Money, PanelHead, ProgressBar, TypeBadge } from '../components/ui';
 import { WishCard } from '../components/WishCard';
 import { api, errorMessage } from '../lib/api';
@@ -44,9 +42,6 @@ export function Home() {
 
   return (
     <div className="stack">
-      <div className="hide-desktop">
-        <QuickSearch />
-      </div>
       {/* ---------- headline ---------- */}
       <section className="panel summary" aria-labelledby="safe-label">
         <div>
@@ -202,7 +197,11 @@ export function Home() {
                   return (
                     <li key={item.id}>
                       <button className="item" onClick={() => openSheet({ kind: 'bought', item })}>
-                        <ItemThumb name={item.name} category={cat} size={40} />
+                        <CategoryIcon
+                          icon={cat?.icon}
+                          name={cat?.name ?? item.name}
+                          color={cat?.color}
+                        />
                         <span className="grow">
                           <span className="item-title" style={{ display: 'block' }}>
                             {item.name}
@@ -267,7 +266,12 @@ export function Home() {
                         className="item"
                         onClick={() => openSheet({ kind: 'expense', expense: e })}
                       >
-                        <ItemThumb name={e.note} category={cat} size={36} />
+                        <CategoryIcon
+                          icon={cat?.icon}
+                          name={cat?.name}
+                          color={cat?.color}
+                          size="sm"
+                        />
                         <span className="grow" style={{ minWidth: 0 }}>
                           <span className="item-title ellipsis" style={{ display: 'block' }}>
                             {e.note || cat?.name || 'Expense'}

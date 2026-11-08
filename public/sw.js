@@ -32,8 +32,8 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(fetch(req).catch(() => caches.match('/index.html')));
     return;
   }
-  // Hashed build assets and item photos: cache first.
-  if (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/items/')) {
+  // Hashed build assets: cache first.
+  if (url.pathname.startsWith('/assets/')) {
     event.respondWith(
       caches.match(req).then(
         (hit) =>

@@ -1,6 +1,6 @@
 import { ChevronRight, Heart, Receipt, Wallet, type LucideIcon } from 'lucide-react';
 import { useApp, type SheetState } from '../../lib/context';
-import { QuickSearch } from '../QuickSearch';
+import { AddItemBar } from '../AddItemBar';
 import { Sheet } from '../ui';
 import { BoughtForm } from './BoughtForm';
 import { ExpenseForm } from './ExpenseForm';
@@ -79,10 +79,10 @@ export function SheetHost() {
         return (
           <Sheet
             title="Add to your wishlist"
-            subtitle="Type an item, then tap Add. That is it."
+            subtitle="Just type it. You can add a price later."
             onClose={closeSheet}
           >
-            <QuickSearch inline autoFocus />
+            <AddItemBar autoFocus onAdded={closeSheet} />
           </Sheet>
         );
       }

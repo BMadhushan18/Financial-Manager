@@ -3,40 +3,34 @@ import {
   CalendarCheck,
   CalendarMinus,
   CalendarPlus,
+  Check,
   Pencil,
-  RotateCcw,
   Repeat,
-  ShoppingBag,
+  RotateCcw,
   Trash2,
+  X,
 } from 'lucide-react';
 import { itemTotalCents } from '../../shared/finance';
 import type { WishlistItem } from '../../shared/types';
 import { useWishActions } from '../lib/actions';
 import { useApp } from '../lib/context';
-import { daysOnList, formatShort } from '../lib/labels';
-import { ItemThumb } from './ItemThumb';
-import { Badge, Menu, TypeBadge, type MenuItem } from './ui';
+import { formatShort } from '../lib/labels';
+import { Badge, Menu, type MenuItem } from './ui';
 
-/** One wishlist item as a row inside a panel. */
-export function WishCard({
-  item,
-  label,
-}: {
-  item: WishlistItem;
-  /** Kept for callers; the number itself is no longer shown. */
-  score?: number;
-  label?: string;
-}) {
-  const { fmt, openSheet, today, categoryById, cycle, confirm } = useApp();
+/** One wishlist item as a to-do style row: tick the circle to mark it bought. */
+export function WishCard({ item }: { item: WishlistItem; score?: number; label?: string }) {
+  const { fmt, openSheet, today, cycle, confirm } = useApp();
   const actions = useWishActions();
-  const category = categoryById(item.category_id);
   const total = itemTotalCents(item);
   const isActive = item.status === 'IDEA' || item.status === 'PLANNED';
   const plannedNow = item.status === 'PLANNED' && item.target_cycle === cycle?.cycle.start;
-  const plannedLater = item.status === 'PLANNED' && !plannedNow;
   const reminderDue = isActive && item.reminder_date !== null && item.reminder_date <= today;
+  const bought = item.status === 'BOUGHT';
+  const dropped = item.status === 'DROPPED';
 
-  const menu: MenuItem[] = [];
+  const menu: MenuItem[] = [
+    { label: 'Edit', icon: Pencil, onClick: () => openSheet({ kind: 'wish', item }) },
+  ];
   if (isActive && !plannedNow) {
     menu.push({
       label: 'Plan for this month',
@@ -53,25 +47,25 @@ export function WishCard({
   }
   if (item.status === 'PLANNED') {
     menu.push({
-      label: 'Move back to ideas',
+      label: 'Remove from this month',
       icon: CalendarMinus,
       onClick: () => void actions.unplan(item),
     });
   }
-  menu.push({
-    label: 'Edit details',
-    icon: Pencil,
-    onClick: () => openSheet({ kind: 'wish', item }),
-  });
-  if (item.status === 'BOUGHT') {
+  if (bought) {
     menu.push({
-      label: 'Undo purchase',
+      label: 'Buy again (add back)',
+      icon: Repeat,
+      onClick: () => void actions.readd(item),
+    });
+    menu.push({
+      label: 'Not bought – undo',
       icon: RotateCcw,
       divider: true,
       onClick: async () => {
         const ok = await confirm({
           title: 'Undo this purchase?',
-          message: `The linked expense will be deleted and "${item.name}" returns to your list.`,
+          message: `The expense will be removed and “${item.name}” goes back to your list.`,
           confirmLabel: 'Undo purchase',
           danger: true,
         });
@@ -79,9 +73,15 @@ export function WishCard({
       },
     });
   }
+  if (dropped)
+    menu.push({
+      label: 'Put back on the list',
+      icon: RotateCcw,
+      onClick: () => void actions.undo(item),
+    });
   if (isActive) {
     menu.push({
-      label: 'Drop – not buying',
+      label: 'Remove – not buying',
       icon: Trash2,
       danger: true,
       divider: true,
@@ -89,73 +89,60 @@ export function WishCard({
     });
   }
 
-  const priceCents =
-    item.status === 'BOUGHT' && item.actual_cents !== null ? item.actual_cents : total;
-  const metaParts = [
-    category?.name,
-    item.status === 'BOUGHT' && item.bought_at
+  const price = bought && item.actual_cents !== null ? item.actual_cents : total;
+  const sub =
+    bought && item.bought_at
       ? `Bought ${formatShort(item.bought_at)}`
-      : item.status === 'DROPPED' && item.dropped_at
-        ? `Dropped ${formatShort(item.dropped_at)}`
-        : daysOnList(item.added_at, today),
-    item.quantity > 1 ? `Qty ${item.quantity}` : null,
-  ].filter(Boolean);
+      : dropped && item.dropped_at
+        ? `Removed ${formatShort(item.dropped_at)}`
+        : null;
 
   return (
-    <article className="wish" aria-label={item.name}>
-      <ItemThumb name={item.name} category={category} size={52} />
-
-      <div className="wish-body">
-        <button className="wish-title" onClick={() => openSheet({ kind: 'wish', item })}>
-          {item.name}
+    <article
+      className={`todo ${bought ? 'done' : ''} ${dropped ? 'dropped' : ''}`}
+      aria-label={item.name}
+    >
+      {isActive ? (
+        <button
+          type="button"
+          className="check-circle"
+          aria-label={`Mark “${item.name}” as bought`}
+          title="Bought it"
+          onClick={() => openSheet({ kind: 'bought', item })}
+        >
+          <Check size={16} />
         </button>
-        <div className="item-meta">{metaParts.join(' · ')}</div>
-        <div className="wish-badges">
-          <TypeBadge type={item.type} />
-          {label && <Badge tone="brand">{label}</Badge>}
-          {plannedNow && (
-            <Badge tone="success" dot>
-              Planned this month
-            </Badge>
-          )}
-          {plannedLater && item.target_cycle && (
-            <Badge tone="outline">Planned from {formatShort(item.target_cycle)}</Badge>
-          )}
-          {item.status === 'DROPPED' && total > 0 && (
-            <Badge tone="success">{fmt(total)} saved</Badge>
-          )}
-          {isActive && item.reminder_date && (
-            <Badge tone={reminderDue ? 'warning' : 'outline'}>
-              <BellRing size={12} aria-hidden="true" />
-              {reminderDue ? 'Reminder due' : `Remind ${formatShort(item.reminder_date)}`}
-            </Badge>
-          )}
-        </div>
-      </div>
+      ) : (
+        <span className={`check-circle ${bought ? 'on' : 'off'}`} aria-hidden="true">
+          {bought ? <Check size={16} /> : <X size={16} />}
+        </span>
+      )}
 
-      <div className="wish-side">
-        <div className="row" style={{ gap: 2 }}>
-          <span className="item-amount">
-            {priceCents > 0 ? fmt(priceCents) : <span className="muted small">No price</span>}
+      <button type="button" className="todo-main" onClick={() => openSheet({ kind: 'wish', item })}>
+        <span className="todo-name">
+          {item.name}
+          {item.quantity > 1 ? ` ×${item.quantity}` : ''}
+        </span>
+        {(sub || plannedNow || item.reminder_date) && (
+          <span className="todo-meta">
+            {sub && <span>{sub}</span>}
+            {plannedNow && (
+              <Badge tone="success" dot>
+                This month
+              </Badge>
+            )}
+            {isActive && item.reminder_date && (
+              <Badge tone={reminderDue ? 'warning' : 'outline'}>
+                <BellRing size={12} aria-hidden="true" />
+                {reminderDue ? 'Reminder' : formatShort(item.reminder_date)}
+              </Badge>
+            )}
           </span>
-          <Menu label={`More actions for ${item.name}`} items={menu} />
-        </div>
-        {isActive && (
-          <button className="btn sm primary" onClick={() => openSheet({ kind: 'bought', item })}>
-            <ShoppingBag size={15} /> Mark bought
-          </button>
         )}
-        {item.status === 'BOUGHT' && (
-          <button className="btn sm" onClick={() => void actions.readd(item)}>
-            <Repeat size={15} /> Add again
-          </button>
-        )}
-        {item.status === 'DROPPED' && (
-          <button className="btn sm" onClick={() => void actions.undo(item)}>
-            <RotateCcw size={15} /> Restore
-          </button>
-        )}
-      </div>
+      </button>
+
+      {price > 0 && <span className="item-amount">{fmt(price)}</span>}
+      <Menu label={`More for ${item.name}`} items={menu} />
     </article>
   );
 }

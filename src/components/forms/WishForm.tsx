@@ -14,7 +14,6 @@ import { api, errorMessage } from '../../lib/api';
 import { useApp } from '../../lib/context';
 import { useBusy } from '../../lib/hooks';
 import { formatDate, PRIORITY_LABEL, URGENCY_LABEL } from '../../lib/labels';
-import { ItemThumb } from '../ItemThumb';
 import { MoneyField, Segmented, Sheet } from '../ui';
 
 /** Edit a wishlist item. Only name, price and category up front; the rest is optional. */
@@ -113,7 +112,6 @@ export function WishForm({ item, onClose }: { item: WishlistItem; onClose: () =>
         }}
       >
         <div className="row" style={{ gap: 12, alignItems: 'flex-end' }}>
-          <ItemThumb name={name} category={categoryById(categoryId)} size={56} />
           <div className="field grow">
             <label htmlFor="wish-name">Item</label>
             <input

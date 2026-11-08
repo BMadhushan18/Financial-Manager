@@ -296,19 +296,9 @@ All endpoints are JSON under `/api`, check the user, validate input on the serve
 
 A personal finance app for one person or a family uses a tiny fraction of this.
 
-## Item catalogue and photos
+## Wishlist
 
-The search bar suggests items from a built-in catalogue of about 540 everyday purchases, with local words (for example _pol_, _parippu_, _pickme_). Each item has a default category and need/want label, so the app never has to ask.
-
-- Data: `shared/catalog-data.ts`. One line per item: `Name | Wikipedia article | other words`. A `~` prefix flips need/want; `-` means no photo.
-- Photos: free-licence images from Wikimedia Commons, **served by the app itself** from `public/items/`. This makes them fast, available offline, and means no third-party requests from users' browsers. Credits are in Settings → Item photo credits.
-
-After editing the catalogue:
-
-```bash
-npx tsx scripts/build-catalog-images.ts     # find a free photo for each item
-npx tsx scripts/download-catalog-images.ts  # save 120px copies to public/items (slow on purpose)
-```
+The wishlist works like a simple to-do list: type anything and tap **Add**. When you buy it, tick the circle, enter the price you paid and confirm. MoneyMind records the expense and links it to the item. The need/want label is guessed quietly from the name and can be changed in the item's details.
 
 ## Privacy
 

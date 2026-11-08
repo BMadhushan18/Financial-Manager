@@ -8,7 +8,7 @@ import {
   type WishSort,
 } from '../../shared/finance';
 import { URGENCIES, type EntryType, type Urgency, type WishlistItem } from '../../shared/types';
-import { QuickSearch } from '../components/QuickSearch';
+import { AddItemBar } from '../components/AddItemBar';
 import { EmptyState, ErrorBox, LoadingPanels } from '../components/ui';
 import { WishCard } from '../components/WishCard';
 import { useApp } from '../lib/context';
@@ -94,9 +94,7 @@ export function Wishlist() {
 
   return (
     <div className="stack">
-      <div className="hide-desktop">
-        <QuickSearch />
-      </div>
+      <AddItemBar />
 
       <section className="panel">
         <div className="tabs" role="tablist" aria-label="Wishlist sections">
@@ -215,7 +213,7 @@ export function Wishlist() {
                 ? 'Use ⋯ on an item and choose "Plan for this month" to set money aside for it.'
                 : tab === 'dropped'
                   ? 'Dropping a want you no longer need counts as money saved.'
-                  : 'Search above and tap Add – that is all.'
+                  : 'Type it above and tap Add – like a to-do list.'
             }
             action={
               tab === 'ideas' ? (

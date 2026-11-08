@@ -8,7 +8,7 @@ import {
   type Expense,
   type PaymentMethod,
 } from '../../shared/types';
-import { ItemThumb } from '../components/ItemThumb';
+import { CategoryIcon } from '../components/CategoryIcon';
 import {
   Badge,
   EmptyState,
@@ -222,7 +222,7 @@ export function Expenses() {
                         className="item"
                         onClick={() => openSheet({ kind: 'expense', expense: e })}
                       >
-                        <ItemThumb name={e.note} category={cat} size={40} />
+                        <CategoryIcon icon={cat?.icon} name={cat?.name} color={cat?.color} />
                         <span className="grow" style={{ minWidth: 0 }}>
                           <span className="item-title ellipsis" style={{ display: 'block' }}>
                             {e.note || cat?.name || 'Expense'}
