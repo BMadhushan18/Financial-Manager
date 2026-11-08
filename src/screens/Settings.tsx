@@ -7,6 +7,7 @@ import { MoneyField, Segmented, Sheet, TypeTag } from '../components/ui';
 import { api, ApiError, errorMessage } from '../lib/api';
 import { useApp } from '../lib/context';
 import { useBusy } from '../lib/hooks';
+import { ChangePasswordForm } from './Login';
 import { BillSheet } from './Plan';
 
 export function Settings() {
@@ -28,6 +29,7 @@ export function Settings() {
     emergency_target: centsToInput(s.emergency_target_cents),
   });
   const [error, setError] = useState<string | null>(null);
+  const [pwSheet, setPwSheet] = useState(false);
   const [catSheet, setCatSheet] = useState<Category | 'new' | null>(null);
   const [billSheet, setBillSheet] = useState<number | 'new' | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -405,11 +407,22 @@ export function Settings() {
       <section className="card stack">
         <h2>Account</h2>
         <p className="small">
-          Signed in as <strong>{boot!.email}</strong>
+          Signed in as <strong>{boot!.username ?? boot!.email}</strong>
         </p>
-        <a className="btn block" href="/cdn-cgi/access/logout">
-          Sign out
-        </a>
+        {boot!.auth_method === 'password' ? (
+          <>
+            <button className="btn block" onClick={() => setPwSheet(true)}>
+              Change password
+            </button>
+            <button className="btn block" onClick={() => void app.signOut()}>
+              Sign out
+            </button>
+          </>
+        ) : (
+          <a className="btn block" href="/cdn-cgi/access/logout">
+            Sign out
+          </a>
+        )}
         <button className="btn block soft-red" onClick={() => void deleteAll()}>
           Delete all my data
         </button>
@@ -420,6 +433,17 @@ export function Settings() {
         account.
       </p>
 
+      {pwSheet && (
+        <Sheet title="Change password" onClose={() => setPwSheet(false)}>
+          <ChangePasswordForm
+            username={boot!.username}
+            onDone={() => {
+              setPwSheet(false);
+              toast({ message: 'Password changed. Other devices were signed out.' });
+            }}
+          />
+        </Sheet>
+      )}
       {catSheet && (
         <CategorySheet
           category={catSheet === 'new' ? null : catSheet}

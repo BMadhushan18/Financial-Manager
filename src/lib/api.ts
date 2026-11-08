@@ -58,15 +58,26 @@ export async function api<T>(path: string, opts: Options = {}): Promise<T> {
         error?: { message?: string; code?: string; details?: Record<string, unknown> };
       } | null
     )?.error;
+    const code = err?.code ?? 'ERROR';
+    // Session expired or temporary password: let the app switch to the right screen.
+    // (Login/password endpoints handle their own 401s.)
+    if (
+      !path.startsWith('/api/auth/') &&
+      (res.status === 401 || code === 'PASSWORD_CHANGE_REQUIRED')
+    ) {
+      window.dispatchEvent(new Event(AUTH_EVENT));
+    }
     throw new ApiError(
       err?.message ?? `Something went wrong (${res.status}). Please try again.`,
       res.status,
-      err?.code ?? 'ERROR',
+      code,
       err?.details,
     );
   }
   return data as T;
 }
+
+export const AUTH_EVENT = 'mm-auth-changed';
 
 export function errorMessage(err: unknown): string {
   if (err instanceof ApiError) return err.message;

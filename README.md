@@ -10,7 +10,7 @@ A calm web app that helps one person:
 
 It does **not** connect to banks. Everything is entered by you. MoneyMind gives guidance, not financial advice, and never blocks your choice.
 
-**Stack:** Vite + React + TypeScript · Cloudflare Pages + Pages Functions · Cloudflare D1 · Cloudflare Access · Chart.js (lazy loaded). Runs on the Cloudflare **free plan**.
+**Stack:** Vite + React + TypeScript · Cloudflare Pages + Pages Functions · Cloudflare D1 · username/password sign-in (optional Cloudflare Access) · Chart.js (lazy loaded). Runs on the Cloudflare **free plan**.
 
 ---
 
@@ -21,7 +21,8 @@ It does **not** connect to banks. Everything is entered by you. MoneyMind gives 
 ├── functions/api/[[route]].ts   # Pages Function: every /api/* request
 ├── server/                      # API code (router, auth, DB, handlers)
 │   ├── handlers/                # core, wishlist, expenses, cycle, reports, backup
-│   ├── auth.ts                  # Cloudflare Access user (+ optional JWT check)
+│   ├── session.ts               # password sign-in sessions (HttpOnly cookie)
+│   ├── auth.ts                  # optional Cloudflare Access sign-in (JWT check)
 │   ├── context.ts               # loads one pay cycle and runs the finance rules
 │   ├── db.ts  http.ts  router.ts
 ├── shared/                      # used by browser, API and tests
@@ -33,7 +34,8 @@ It does **not** connect to banks. Everything is entered by you. MoneyMind gives 
 │   ├── components/              # UI parts, forms (bottom sheets), dialogs
 │   ├── lib/                     # api client, context, hooks, labels, actions
 │   ├── App.tsx  AppProvider.tsx  main.tsx  styles.css
-├── migrations/0001_init.sql     # D1 schema
+├── migrations/                  # D1 schema (0001 init, 0002 password sign-in)
+├── scripts/create-user.ts       # create / reset a sign-in account
 ├── scripts/generate-seed.ts     # writes seed/seed.sql (demo data)
 ├── scripts/make-icons.ts        # writes the PWA PNG icons
 ├── public/                      # manifest, icons, service worker
@@ -70,7 +72,7 @@ npm run dev        # terminal 2: React with hot reload on http://localhost:5173
 
 Open http://localhost:5173. (Or open http://127.0.0.1:8788 to use the built app.)
 
-Locally there is no Cloudflare Access, so the API uses `DEV_USER_EMAIL` from `.dev.vars`. This fallback **only works on localhost**.
+With `DEV_USER_EMAIL` in `.dev.vars`, the local API skips sign-in and uses that email. This fallback **only works on localhost**. To try the real sign-in screen locally, remove that line and create an account with `scripts/create-user.ts --local` (see [Sign-in](#5-sign-in)).
 
 Useful commands:
 
@@ -151,7 +153,33 @@ Pages reads the binding from `wrangler.toml`. To check: Pages project → **Sett
 
 ---
 
-## 5. Protect it with Cloudflare Access (email one-time code)
+## 5. Sign-in
+
+MoneyMind has its own **username + password** sign-in:
+
+- Passwords are stored only as salted PBKDF2-SHA256 hashes (100,000 rounds).
+- Sessions use a random token in an `HttpOnly; Secure; SameSite=Lax` cookie. The database stores only a SHA-256 of the token.
+- After 5 wrong passwords, sign-in is paused for 15 minutes.
+- A new account gets a **temporary password**. At the first sign-in the app is locked until the user chooses a new one (8+ characters, a letter and a number).
+- Changing the password signs out all other devices.
+
+### Create an account
+
+The password is typed only on your computer and **never stored in the repository** (important: this repo is public):
+
+```bash
+# remote = the real Cloudflare database (use --local for your computer)
+USER_PASSWORD='temporary-password' npx tsx scripts/create-user.ts \
+  --username yourname --email you@example.com --remote
+```
+
+Running it again for the same email resets the password (temporary again) and signs out every session. Add `--permanent` to skip the forced change.
+
+On Windows PowerShell, set the password first: `$env:USER_PASSWORD='temporary-password'`, then run the command without the `USER_PASSWORD=...` prefix.
+
+### Optional: Cloudflare Access as an extra lock
+
+You can also put Cloudflare Access (email one-time code) in front of the whole site. Then people need both the email code and the password.
 
 1. Cloudflare dashboard → **Zero Trust** (free plan is fine, up to 50 users).
 2. **Settings → Authentication → Login methods**: make sure **One-time PIN** is enabled.
@@ -161,16 +189,16 @@ Pages reads the binding from `wrangler.toml`. To check: Pages project → **Sett
    - Policy: **Allow**, rule **Emails** → your email address(es).
 4. Save. Opening the site now asks for your email and sends you a code.
 
-Access adds the `Cf-Access-Authenticated-User-Email` header to every request, and the API stores all data per user. Every SQL query filters by the user's id, so one user can never read another user's data.
-
-**Recommended:** also let the API verify the Access token itself. In the Access application, copy the **Application Audience (AUD) tag**. Then in Pages → **Settings → Variables and secrets** add:
+You can also let people sign in with **Access alone** (no password). To do that, set these in Pages → **Settings → Variables and secrets**. Copy the **Application Audience (AUD) tag** from the Access application:
 
 | Name                 | Value                           |
 | -------------------- | ------------------------------- |
 | `ACCESS_TEAM_DOMAIN` | `yourteam.cloudflareaccess.com` |
 | `ACCESS_AUD`         | the AUD tag                     |
 
-With these set, the API checks the signed `Cf-Access-Jwt-Assertion` token instead of trusting the header alone.
+The API then verifies the signed `Cf-Access-Jwt-Assertion` token. (`TRUST_ACCESS_HEADER=true` trusts the plain email header instead. Only use that when Access protects every domain of the site.) Without these variables, Access identity headers are ignored, so nobody can fake them.
+
+Every SQL query filters by the signed-in user's id, so one user can never read another user's data.
 
 ---
 

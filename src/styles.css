@@ -949,3 +949,15 @@ details.more > summary {
     transition: none !important;
   }
 }
+
+/* ---------- sign-in ---------- */
+.auth-page {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
+}
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+}

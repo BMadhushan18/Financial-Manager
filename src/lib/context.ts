@@ -82,7 +82,12 @@ export interface AppValue {
    */
   deferDelete: (key: string, message: string, commit: () => Promise<unknown>) => void;
   isHidden: (key: string) => boolean;
+  /** Sign-in state: loading → ok | signed-out | must-change (temporary password). */
+  auth: AuthState;
+  signOut: () => Promise<void>;
 }
+
+export type AuthState = 'loading' | 'ok' | 'signed-out' | 'must-change';
 
 export const AppContext = createContext<AppValue | null>(null);
 

@@ -1,5 +1,6 @@
 // Cloudflare Pages Function: every /api/* request lands here and is routed
 // by server/router.ts. Handlers register themselves on import.
+import '../../server/handlers/auth';
 import '../../server/handlers/core';
 import '../../server/handlers/wishlist';
 import '../../server/handlers/expenses';

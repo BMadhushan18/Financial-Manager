@@ -7,6 +7,7 @@ import { useApp } from './lib/context';
 import { useHashRoute } from './lib/hooks';
 import { Expenses } from './screens/Expenses';
 import { Home } from './screens/Home';
+import { ForcedPasswordChange, Login } from './screens/Login';
 import { Onboarding } from './screens/Onboarding';
 import { Plan } from './screens/Plan';
 import { Settings } from './screens/Settings';
@@ -48,6 +49,8 @@ export function App() {
       .catch(() => undefined);
   }, [cycle, refresh]);
 
+  if (app.auth === 'signed-out') return <Login />;
+  if (app.auth === 'must-change') return <ForcedPasswordChange />;
   if (loadError && !boot) {
     return (
       <main>

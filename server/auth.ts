@@ -1,7 +1,9 @@
-// Identify the user. Cloudflare Access sits in front of the whole site and
-// adds the "Cf-Access-Authenticated-User-Email" header after the email
-// one-time-code login. If ACCESS_TEAM_DOMAIN and ACCESS_AUD are set we also
-// cryptographically verify the Access JWT (recommended for production).
+// Optional sign-in through Cloudflare Access (used when there is no password
+// session). It is only honoured when explicitly configured, because without
+// Access in front of the site anyone could send a fake identity header:
+//  - ACCESS_TEAM_DOMAIN + ACCESS_AUD set  → the signed Access JWT is verified (recommended)
+//  - TRUST_ACCESS_HEADER = "true"         → the Cf-Access-Authenticated-User-Email header is trusted
+//  - DEV_USER_EMAIL (localhost only)      → local development without signing in
 import { HttpError, type Env } from './http';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -23,22 +25,21 @@ function isLocalhost(request: Request): boolean {
   return host === 'localhost' || host === '127.0.0.1' || host === '[::1]';
 }
 
-export async function getUserEmail(request: Request, env: Env): Promise<string> {
+/** Email from Cloudflare Access / local dev, or null when none applies. */
+export async function accessEmail(request: Request, env: Env): Promise<string | null> {
   if (env.ACCESS_TEAM_DOMAIN && env.ACCESS_AUD) {
     const token = request.headers.get('Cf-Access-Jwt-Assertion');
-    if (!token) {
-      throw new HttpError(401, 'Please sign in through Cloudflare Access.', 'UNAUTHENTICATED');
+    if (token) {
+      const payload = await verifyAccessJwt(token, env.ACCESS_TEAM_DOMAIN, env.ACCESS_AUD);
+      return normalizeEmail(payload.email);
     }
-    const payload = await verifyAccessJwt(token, env.ACCESS_TEAM_DOMAIN, env.ACCESS_AUD);
-    return normalizeEmail(payload.email);
+  } else if (env.TRUST_ACCESS_HEADER === 'true') {
+    const header = request.headers.get('Cf-Access-Authenticated-User-Email');
+    if (header) return normalizeEmail(header);
   }
 
-  const header = request.headers.get('Cf-Access-Authenticated-User-Email');
-  if (header) return normalizeEmail(header);
-
   if (env.DEV_USER_EMAIL && isLocalhost(request)) return normalizeEmail(env.DEV_USER_EMAIL);
-
-  throw new HttpError(401, 'Please sign in through Cloudflare Access.', 'UNAUTHENTICATED');
+  return null;
 }
 
 /* ---------------- Access JWT verification (RS256) ---------------- */

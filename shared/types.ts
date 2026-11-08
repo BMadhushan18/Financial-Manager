@@ -247,6 +247,8 @@ export interface ReportsResponse {
 
 export interface BootstrapResponse {
   email: string;
+  username: string | null;
+  auth_method: 'password' | 'access';
   settings: Settings;
   categories: Category[];
   bills: FixedBill[];

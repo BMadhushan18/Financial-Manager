@@ -5,6 +5,8 @@ export interface Env {
   /** e.g. "yourteam.cloudflareaccess.com" – enables JWT verification when set with ACCESS_AUD. */
   ACCESS_TEAM_DOMAIN?: string;
   ACCESS_AUD?: string;
+  /** "true" only when Cloudflare Access protects the whole site (trusts its email header). */
+  TRUST_ACCESS_HEADER?: string;
   /** Local development only (honoured on localhost). */
   DEV_USER_EMAIL?: string;
 }

@@ -8,10 +8,11 @@ import type {
 } from '../shared/types';
 import { ConfirmSheet, PurchaseWarningSheet, Toasts, type ToastItem } from './components/Dialogs';
 import { SheetHost } from './components/forms/SheetHost';
-import { api, errorMessage } from './lib/api';
+import { api, ApiError, AUTH_EVENT, errorMessage } from './lib/api';
 import {
   AppContext,
   type AppValue,
+  type AuthState,
   type ConfirmOptions,
   type PendingPurchase,
   type PurchaseRequest,
@@ -43,6 +44,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const handlers = useRef(new Map<number, ToastHandlers>());
   const toastId = useRef(0);
 
+  const [auth, setAuth] = useState<AuthState>('loading');
+
   const refresh = useCallback(async () => {
     try {
       const [b, c] = await Promise.all([
@@ -52,14 +55,45 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setBoot(b);
       setCycle(c);
       setLoadError(null);
+      setAuth('ok');
     } catch (e) {
-      setLoadError(errorMessage(e));
+      if (e instanceof ApiError && e.status === 401) {
+        setAuth('signed-out');
+        setBoot(null);
+        setCycle(null);
+        setLoadError(null);
+      } else if (e instanceof ApiError && e.code === 'PASSWORD_CHANGE_REQUIRED') {
+        setAuth('must-change');
+        setLoadError(null);
+      } else {
+        setLoadError(errorMessage(e));
+      }
     }
   }, []);
 
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  // Any request that finds the session expired (or a password change required) re-checks sign-in.
+  // Only reacts while signed in, so refresh()'s own 401 cannot loop.
+  useEffect(() => {
+    if (auth !== 'ok') return;
+    const onAuth = () => void refresh();
+    window.addEventListener(AUTH_EVENT, onAuth);
+    return () => window.removeEventListener(AUTH_EVENT, onAuth);
+  }, [refresh, auth]);
+
+  const signOut = useCallback(async () => {
+    try {
+      await api('/api/auth/logout', { method: 'POST' });
+    } catch {
+      // even if the request fails, show the sign-in screen
+    }
+    setBoot(null);
+    setCycle(null);
+    setAuth('signed-out');
+  }, []);
 
   // A new day may start a new cycle: refresh when the app comes back into view.
   useEffect(() => {
@@ -221,6 +255,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       checkPurchase,
       deferDelete,
       isHidden,
+      auth,
+      signOut,
     };
   }, [
     today,
@@ -240,6 +276,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     checkPurchase,
     deferDelete,
     isHidden,
+    auth,
+    signOut,
   ]);
 
   return (

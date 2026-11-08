@@ -37,7 +37,7 @@ type Row = Record<string, unknown>;
 
 /* ---------------- bootstrap & settings ---------------- */
 
-route('GET', '/api/bootstrap', async ({ db, userId, email }) => {
+route('GET', '/api/bootstrap', async ({ db, userId, email, session }) => {
   const [settings, cats, bills, goal] = await db.batch<Row>([
     db.prepare('SELECT * FROM settings WHERE user_id = ?').bind(userId),
     db
@@ -50,6 +50,8 @@ route('GET', '/api/bootstrap', async ({ db, userId, email }) => {
   ]);
   const body: BootstrapResponse = {
     email,
+    username: session?.username ?? null,
+    auth_method: session ? 'password' : 'access',
     settings: settings?.results[0]
       ? mapSettings(settings.results[0])
       : await getSettings(db, userId),
