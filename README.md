@@ -134,7 +134,19 @@ Commit the `wrangler.toml` change and push.
 
 ---
 
-## 4. Connect to Cloudflare Pages (auto-deploy from `main`)
+## 4. Deploy to Cloudflare Pages
+
+### Option A – deploy from your computer (how the live site is deployed)
+
+```bash
+npx wrangler pages project create moneymind --production-branch main   # first time only
+npm run build
+npx wrangler pages deploy dist --project-name moneymind --branch main
+```
+
+The D1 binding comes from `wrangler.toml`. To deploy automatically on every push, add two GitHub repository secrets: `CLOUDFLARE_API_TOKEN` (permissions: _Cloudflare Pages – Edit_, _D1 – Edit_) and `CLOUDFLARE_ACCOUNT_ID`. The workflow in `.github/workflows/deploy.yml` then tests, migrates and deploys every push to `main`. Without the secrets it still runs the checks and skips the deploy.
+
+### Option B – Git integration in the dashboard (alternative)
 
 1. Cloudflare dashboard → **Workers & Pages** → **Create** → **Pages** → **Connect to Git**.
 2. Pick your repository.

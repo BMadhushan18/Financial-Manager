@@ -1,8 +1,41 @@
-import { useState } from 'react';
+import { CheckCircle2, KeyRound, LockKeyhole, PiggyBank, ShieldCheck, Wallet } from 'lucide-react';
+import { useState, type ReactNode } from 'react';
 import { validateNewPassword } from '../../shared/password';
+import { Logo } from '../components/Logo';
 import { api, errorMessage } from '../lib/api';
 import { useApp } from '../lib/context';
 import { useBusy } from '../lib/hooks';
+
+/** Split layout used by sign-in screens: brand panel (desktop) + form. */
+function AuthLayout({ children }: { children: ReactNode }) {
+  return (
+    <div className="auth">
+      <aside className="auth-aside">
+        <Logo />
+        <div>
+          <h2>Plan your salary. Spend with confidence.</h2>
+          <ul>
+            <li>
+              <Wallet size={18} /> Know exactly what is safe to spend until payday
+            </li>
+            <li>
+              <PiggyBank size={18} /> Pay yourself first with a savings goal
+            </li>
+            <li>
+              <ShieldCheck size={18} /> Gentle checks before big purchases
+            </li>
+          </ul>
+        </div>
+        <p style={{ fontSize: '0.8rem', color: '#a5b4fc' }}>
+          Your data is private and stored in your own Cloudflare account.
+        </p>
+      </aside>
+      <main className="auth-main">
+        <div className="auth-card">{children}</div>
+      </main>
+    </div>
+  );
+}
 
 /** Username + password sign-in. */
 export function Login() {
@@ -33,23 +66,23 @@ export function Login() {
     });
 
   return (
-    <main className="auth-page">
+    <AuthLayout>
       <form
-        className="card stack auth-card"
+        className="stack"
         onSubmit={(e) => {
           e.preventDefault();
           void submit();
         }}
         aria-labelledby="login-title"
       >
-        <div className="brand" style={{ justifyContent: 'center' }}>
-          <img src="/icon.svg" alt="" width={40} height={40} />
+        <div className="hide-desktop" style={{ marginBottom: 8 }}>
+          <Logo />
         </div>
-        <div style={{ textAlign: 'center' }}>
-          <h1 id="login-title" style={{ fontSize: '1.4rem', margin: 0 }}>
-            Welcome to MoneyMind
-          </h1>
-          <p className="muted small">Sign in to see your plan.</p>
+        <div>
+          <h1 id="login-title">Sign in</h1>
+          <p className="muted small" style={{ marginTop: 4 }}>
+            Welcome back. Enter your details to continue.
+          </p>
         </div>
         <div className="field">
           <label htmlFor="login-user">Username</label>
@@ -74,21 +107,23 @@ export function Login() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-          <label className="row small muted" style={{ minHeight: 32 }}>
-            <input type="checkbox" checked={show} onChange={(e) => setShow(e.target.checked)} />{' '}
-            Show password
-          </label>
         </div>
+        <label className="check">
+          <input type="checkbox" checked={show} onChange={(e) => setShow(e.target.checked)} /> Show
+          password
+        </label>
         {error && (
-          <p className="field-error" role="alert">
-            {error}
-          </p>
+          <div className="callout danger" role="alert">
+            <LockKeyhole size={16} />
+            <span>{error}</span>
+          </div>
         )}
-        <button className="btn primary block" type="submit" disabled={busy}>
+        <button className="btn primary lg block" type="submit" disabled={busy}>
           {busy ? 'Signing in…' : 'Sign in'}
         </button>
+        <p className="hint center">Forgot your password? Ask the account owner to reset it.</p>
       </form>
-    </main>
+    </AuthLayout>
   );
 }
 
@@ -166,12 +201,14 @@ export function ChangePasswordForm({
           aria-describedby="pw-rules"
           onChange={(e) => setNext(e.target.value)}
         />
-        <span id="pw-rules" className={`hint ${hint ? 'soft-red' : next ? 'positive' : ''}`}>
-          {hint ?? (next ? '✓ Looks good' : 'At least 8 characters, with a letter and a number.')}
+        <span id="pw-rules" className={`hint row ${hint ? 'neg' : next ? 'pos' : ''}`}>
+          {!hint && next && <CheckCircle2 size={14} />}
+          {hint ??
+            (next ? 'Strong enough' : 'At least 8 characters, including a letter and a number.')}
         </span>
       </div>
       <div className="field">
-        <label htmlFor="pw-repeat">Repeat new password</label>
+        <label htmlFor="pw-repeat">Confirm new password</label>
         <input
           id="pw-repeat"
           className="input"
@@ -181,7 +218,7 @@ export function ChangePasswordForm({
           onChange={(e) => setRepeat(e.target.value)}
         />
       </div>
-      <label className="row small muted" style={{ minHeight: 32 }}>
+      <label className="check">
         <input type="checkbox" checked={show} onChange={(e) => setShow(e.target.checked)} /> Show
         passwords
       </label>
@@ -190,8 +227,8 @@ export function ChangePasswordForm({
           {error}
         </p>
       )}
-      <button className="btn primary block" type="submit" disabled={busy}>
-        {busy ? 'Saving…' : forced ? 'Set new password' : 'Change password'}
+      <button className="btn primary lg block" type="submit" disabled={busy}>
+        {busy ? 'Saving…' : forced ? 'Set new password' : 'Update password'}
       </button>
     </form>
   );
@@ -201,30 +238,35 @@ export function ChangePasswordForm({
 export function ForcedPasswordChange() {
   const { refresh, signOut, toast } = useApp();
   return (
-    <main className="auth-page">
-      <section className="card stack auth-card" aria-labelledby="fpc-title">
-        <div style={{ textAlign: 'center' }}>
-          <span style={{ fontSize: '2rem' }} aria-hidden="true">
-            🔐
-          </span>
-          <h1 id="fpc-title" style={{ fontSize: '1.3rem', margin: '4px 0' }}>
-            Set your own password
-          </h1>
-          <p className="muted small">
-            You signed in with a temporary password. Choose a new one that only you know.
+    <AuthLayout>
+      <div className="stack">
+        <div className="hide-desktop">
+          <Logo />
+        </div>
+        <span
+          className="tile"
+          style={{ background: 'var(--brand-soft)', color: 'var(--brand)', width: 44, height: 44 }}
+        >
+          <KeyRound size={20} />
+        </span>
+        <div>
+          <h1>Set your password</h1>
+          <p className="muted small" style={{ marginTop: 4 }}>
+            You signed in with a temporary password. Choose a new one that only you know to
+            continue.
           </p>
         </div>
         <ChangePasswordForm
           forced
           onDone={() => {
-            toast({ message: 'Password changed. Welcome!' });
+            toast({ message: 'Password updated. Welcome to MoneyMind.' });
             void refresh();
           }}
         />
         <button className="btn ghost block" type="button" onClick={() => void signOut()}>
           Sign out
         </button>
-      </section>
-    </main>
+      </div>
+    </AuthLayout>
   );
 }

@@ -23,7 +23,9 @@
     "db:seed:remote": "npm run seed:gen && wrangler d1 execute moneymind --remote --file=seed/seed.sql"
   },
   "dependencies": {
+    "@fontsource-variable/inter": "^5.1.0",
     "chart.js": "^4.5.0",
+    "lucide-react": "^0.468.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },

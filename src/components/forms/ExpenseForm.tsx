@@ -1,3 +1,4 @@
+import { ChevronDown, Info, Undo2 } from 'lucide-react';
 import { useState } from 'react';
 import { addDays, centsToInput, formatMoney, parseMoneyToCents } from '../../../shared/finance';
 import {
@@ -10,7 +11,8 @@ import { api, errorMessage } from '../../lib/api';
 import { useApp } from '../../lib/context';
 import { useBusy } from '../../lib/hooks';
 import { formatShort, METHOD_LABEL } from '../../lib/labels';
-import { MoneyField, Segmented, Sheet, TypeTag } from '../ui';
+import { CategoryIcon } from '../CategoryIcon';
+import { MoneyField, Segmented, Sheet, TypeBadge } from '../ui';
 
 /** Quick add (amount → category → save) and edit, with refund + delete. */
 export function ExpenseForm({ expense, onClose }: { expense?: Expense; onClose: () => void }) {
@@ -38,11 +40,11 @@ export function ExpenseForm({ expense, onClose }: { expense?: Expense; onClose: 
     run(async () => {
       const cents = parseMoneyToCents(amount);
       if (cents === null || cents <= 0) {
-        setError('Please enter an amount, like 1250 or 1,250.50');
+        setError('Please enter an amount, for example 1250 or 1,250.50.');
         return;
       }
       if (!categoryId && !editing) {
-        setError('Please pick a category.');
+        setError('Please choose a category.');
         return;
       }
       setError(null);
@@ -62,7 +64,7 @@ export function ExpenseForm({ expense, onClose }: { expense?: Expense; onClose: 
           onClose();
           return;
         }
-        // Smart warning for wants (needs never get a check when adding directly).
+        // Smart warning for wants (needs never get a check when added directly).
         const choice =
           effectiveType === 'WANT'
             ? await checkPurchase({ amount_cents: cents, type: 'WANT', category_id: categoryId })
@@ -80,7 +82,7 @@ export function ExpenseForm({ expense, onClose }: { expense?: Expense; onClose: 
             },
           });
         } else {
-          // Remind me later / next month → keep it on the wishlist instead of spending now.
+          // Remind later / next month → keep it on the wishlist instead of spending now.
           const cooling = app.boot?.settings.cooling_days ?? 7;
           const reminder = choice === 'remind' ? addDays(today, cooling) : null;
           const res = await api<{ item: { id: number } }>('/api/wishlist', {
@@ -102,7 +104,7 @@ export function ExpenseForm({ expense, onClose }: { expense?: Expense; onClose: 
             toast({ message: 'Saved to your wishlist for next month. Nothing was spent.' });
           } else {
             toast({
-              message: `Saved to your wishlist. We will remind you on ${formatShort(reminder!)}.`,
+              message: `Saved to your wishlist. Reminder set for ${formatShort(reminder!)}.`,
             });
           }
         }
@@ -126,7 +128,6 @@ export function ExpenseForm({ expense, onClose }: { expense?: Expense; onClose: 
       if (!ok) return;
     }
     onClose();
-    // 5-second undo: the delete only happens if Undo is not pressed.
     app.deferDelete(
       `expense:${expense.id}`,
       isRefund ? 'Refund deleted.' : 'Expense deleted.',
@@ -147,7 +148,7 @@ export function ExpenseForm({ expense, onClose }: { expense?: Expense; onClose: 
           method: 'POST',
           body: { amount_cents: cents, date: today },
         });
-        toast({ message: `Refund of ${formatMoney(cents, app.currency)} added.` });
+        toast({ message: `Refund of ${formatMoney(cents, app.currency)} recorded.` });
         changed();
         onClose();
       } catch (e) {
@@ -155,9 +156,13 @@ export function ExpenseForm({ expense, onClose }: { expense?: Expense; onClose: 
       }
     });
 
-  const title = isRefund ? 'Edit refund' : editing ? 'Edit expense' : 'Add expense';
+  const title = isRefund ? 'Edit refund' : editing ? 'Edit expense' : 'New expense';
   return (
-    <Sheet title={title} onClose={onClose}>
+    <Sheet
+      title={title}
+      subtitle={editing ? undefined : 'Amount, category, save – that is all you need.'}
+      onClose={onClose}
+    >
       <form
         className="stack"
         onSubmit={(e) => {
@@ -188,9 +193,7 @@ export function ExpenseForm({ expense, onClose }: { expense?: Expense; onClose: 
                     setType(null);
                   }}
                 >
-                  <span className="emoji" aria-hidden="true">
-                    {c.icon}
-                  </span>
+                  <CategoryIcon icon={c.icon} name={c.name} color={c.color} size="sm" />
                   {c.name}
                   <span className="sr-only">({c.type === 'NEED' ? 'need' : 'want'})</span>
                 </button>
@@ -198,26 +201,30 @@ export function ExpenseForm({ expense, onClose }: { expense?: Expense; onClose: 
             </div>
             {category && (
               <span className="hint row">
-                <TypeTag type={effectiveType} />
-                {type === null ? `from category ${category.name}` : 'changed by you'}
+                <TypeBadge type={effectiveType} />
+                {type === null ? `Based on the ${category.name} category` : 'Set by you'}
               </span>
             )}
           </div>
         )}
 
-        {expense?.wishlist_item_id && (
-          <p className="hint">
-            This came from your wishlist. Changes here update the wishlist item too.
-          </p>
-        )}
-        {expense?.fixed_bill_id && (
-          <p className="hint">This is a bill payment. Changes update the bill for that cycle.</p>
+        {(expense?.wishlist_item_id || expense?.fixed_bill_id) && (
+          <div className="callout info">
+            <Info size={16} />
+            <span>
+              {expense.wishlist_item_id
+                ? 'This came from your wishlist. Changes here also update the wishlist item.'
+                : 'This is a bill payment. Changes also update the bill for that cycle.'}
+            </span>
+          </div>
         )}
 
         <details className="more" open={editing}>
-          <summary>More details (date, payment, note)</summary>
-          <div className="stack" style={{ marginTop: 8 }}>
-            <div className="grid-2">
+          <summary>
+            Date, payment method and note <ChevronDown size={16} />
+          </summary>
+          <div className="stack" style={{ marginTop: 12 }}>
+            <div className="form-grid">
               <div className="field">
                 <label htmlFor="exp-date">Date</label>
                 <input
@@ -230,7 +237,7 @@ export function ExpenseForm({ expense, onClose }: { expense?: Expense; onClose: 
                 />
               </div>
               <div className="field">
-                <label htmlFor="exp-method">Payment</label>
+                <label htmlFor="exp-method">Payment method</label>
                 <select
                   id="exp-method"
                   className="input"
@@ -253,16 +260,16 @@ export function ExpenseForm({ expense, onClose }: { expense?: Expense; onClose: 
                 value={note}
                 maxLength={200}
                 onChange={(e) => setNote(e.target.value)}
-                placeholder="Optional"
+                placeholder="Optional, e.g. Weekly groceries"
               />
             </div>
             {!isRefund && (
               <Segmented
-                label="Need or want?"
+                label="Need or want"
                 value={effectiveType}
                 options={[
-                  { value: 'NEED', label: '● Need' },
-                  { value: 'WANT', label: '★ Want' },
+                  { value: 'NEED', label: 'Need' },
+                  { value: 'WANT', label: 'Want' },
                 ]}
                 onChange={setType}
               />
@@ -276,20 +283,23 @@ export function ExpenseForm({ expense, onClose }: { expense?: Expense; onClose: 
           </p>
         )}
 
-        <button className="btn primary block" type="submit" disabled={busy}>
-          {busy ? 'Saving…' : 'Save'}
+        <button className="btn primary lg block" type="submit" disabled={busy}>
+          {busy ? 'Saving…' : editing ? 'Save changes' : 'Save expense'}
         </button>
 
         {editing && expense && (
-          <div className="stack" style={{ gap: 8 }}>
+          <div className="stack-sm">
             {!isRefund && expense.amount_cents > 0 && (
               <>
                 {!showRefund ? (
                   <button type="button" className="btn block" onClick={() => setShowRefund(true)}>
-                    Add a refund
+                    <Undo2 size={16} /> Record a refund
                   </button>
                 ) : (
-                  <div className="card flat stack" style={{ gap: 8 }}>
+                  <div
+                    className="panel panel-body stack-sm"
+                    style={{ background: 'var(--surface-2)' }}
+                  >
                     <MoneyField
                       label="Refund amount"
                       value={refundAmount}
@@ -312,11 +322,7 @@ export function ExpenseForm({ expense, onClose }: { expense?: Expense; onClose: 
                 )}
               </>
             )}
-            <button
-              type="button"
-              className="btn ghost block soft-red"
-              onClick={() => void remove()}
-            >
+            <button type="button" className="btn danger-ghost block" onClick={() => void remove()}>
               Delete {isRefund ? 'refund' : 'expense'}
             </button>
           </div>

@@ -6,7 +6,7 @@ import { api, errorMessage } from '../../lib/api';
 import { useApp } from '../../lib/context';
 import { useBusy } from '../../lib/hooks';
 import { METHOD_LABEL } from '../../lib/labels';
-import { MoneyField, Sheet, TypeTag } from '../ui';
+import { MoneyField, Sheet, TypeBadge } from '../ui';
 
 /** Mark a wish as bought: actual price + date, then the smart check, then ONE linked expense. */
 export function BoughtForm({ item, onClose }: { item: WishlistItem; onClose: () => void }) {
@@ -45,7 +45,7 @@ export function BoughtForm({ item, onClose }: { item: WishlistItem; onClose: () 
           body: { actual_cents: cents, date, payment_method: method },
         });
         toast({
-          message: `${item.name} bought for ${fmt(cents)}. Added to expenses.`,
+          message: `"${item.name}" bought for ${fmt(cents)} and added to expenses.`,
           actionLabel: 'Undo',
           onAction: () => void undo({ ...item, status: 'BOUGHT' }, true),
         });
@@ -57,7 +57,7 @@ export function BoughtForm({ item, onClose }: { item: WishlistItem; onClose: () 
     });
 
   return (
-    <Sheet title="Mark as bought" onClose={onClose}>
+    <Sheet title="Mark as bought" subtitle={item.name} onClose={onClose}>
       <form
         className="stack"
         onSubmit={(e) => {
@@ -66,18 +66,11 @@ export function BoughtForm({ item, onClose }: { item: WishlistItem; onClose: () 
         }}
       >
         <div className="row">
-          <strong className="grow">{item.name}</strong>
-          <TypeTag type={item.type} />
+          <TypeBadge type={item.type} />
+          {estimate > 0 && <span className="small muted">Estimated {fmt(estimate)}</span>}
         </div>
-        <MoneyField
-          label="Price you paid"
-          value={price}
-          onChange={setPrice}
-          autoFocus
-          big
-          hint={estimate > 0 ? `Estimate was ${fmt(estimate)}` : undefined}
-        />
-        <div className="grid-2">
+        <MoneyField label="Price paid" value={price} onChange={setPrice} autoFocus big />
+        <div className="form-grid">
           <div className="field">
             <label htmlFor="bought-date">Date</label>
             <input
@@ -89,7 +82,7 @@ export function BoughtForm({ item, onClose }: { item: WishlistItem; onClose: () 
             />
           </div>
           <div className="field">
-            <label htmlFor="bought-method">Payment</label>
+            <label htmlFor="bought-method">Payment method</label>
             <select
               id="bought-method"
               className="input"
@@ -104,13 +97,14 @@ export function BoughtForm({ item, onClose }: { item: WishlistItem; onClose: () 
             </select>
           </div>
         </div>
+        <p className="hint">One expense is created automatically and linked to this item.</p>
         {error && (
           <p className="field-error" role="alert">
             {error}
           </p>
         )}
-        <button className="btn primary block" type="submit" disabled={busy}>
-          {busy ? 'Checking…' : 'Mark as bought'}
+        <button className="btn primary lg block" type="submit" disabled={busy}>
+          {busy ? 'Checking…' : 'Confirm purchase'}
         </button>
       </form>
     </Sheet>

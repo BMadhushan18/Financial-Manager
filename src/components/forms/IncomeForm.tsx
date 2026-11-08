@@ -51,7 +51,7 @@ export function IncomeForm({ income, onClose }: { income?: IncomeEntry; onClose:
   };
 
   return (
-    <Sheet title={income ? 'Edit income' : 'Add income'} onClose={onClose}>
+    <Sheet title={income ? 'Edit income' : 'New income'} onClose={onClose}>
       <form
         className="stack"
         onSubmit={(e) => {
@@ -60,31 +60,22 @@ export function IncomeForm({ income, onClose }: { income?: IncomeEntry; onClose:
         }}
       >
         <MoneyField label="Amount" value={amount} onChange={setAmount} autoFocus big />
-        <div className="field">
-          <label htmlFor="inc-source">Type</label>
-          <select
-            id="inc-source"
-            className="input"
-            value={source}
-            onChange={(e) => setSource(e.target.value as IncomeSource)}
-          >
-            {INCOME_SOURCES.map((s) => (
-              <option key={s} value={s}>
-                {SOURCE_LABEL[s]}
-              </option>
-            ))}
-          </select>
-        </div>
-        <Segmented
-          label="Status"
-          value={status}
-          options={[
-            { value: 'received', label: 'Received' },
-            { value: 'expected', label: 'Expected' },
-          ]}
-          onChange={setStatus}
-        />
-        <div className="grid-2">
+        <div className="form-grid">
+          <div className="field">
+            <label htmlFor="inc-source">Source</label>
+            <select
+              id="inc-source"
+              className="input"
+              value={source}
+              onChange={(e) => setSource(e.target.value as IncomeSource)}
+            >
+              {INCOME_SOURCES.map((s) => (
+                <option key={s} value={s}>
+                  {SOURCE_LABEL[s]}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="field">
             <label htmlFor="inc-date">Date</label>
             <input
@@ -95,27 +86,37 @@ export function IncomeForm({ income, onClose }: { income?: IncomeEntry; onClose:
               onChange={(e) => setDate(e.target.value)}
             />
           </div>
-          <div className="field">
-            <label htmlFor="inc-note">Note</label>
-            <input
-              id="inc-note"
-              className="input"
-              value={note}
-              maxLength={200}
-              onChange={(e) => setNote(e.target.value)}
-            />
-          </div>
+        </div>
+        <Segmented
+          label="Status"
+          value={status}
+          options={[
+            { value: 'received', label: 'Received' },
+            { value: 'expected', label: 'Expected' },
+          ]}
+          onChange={setStatus}
+        />
+        <div className="field">
+          <label htmlFor="inc-note">Description</label>
+          <input
+            id="inc-note"
+            className="input"
+            value={note}
+            maxLength={200}
+            placeholder="Optional"
+            onChange={(e) => setNote(e.target.value)}
+          />
         </div>
         {error && (
           <p className="field-error" role="alert">
             {error}
           </p>
         )}
-        <button className="btn primary block" type="submit" disabled={busy}>
-          {busy ? 'Saving…' : 'Save'}
+        <button className="btn primary lg block" type="submit" disabled={busy}>
+          {busy ? 'Saving…' : income ? 'Save changes' : 'Add income'}
         </button>
         {income && (
-          <button type="button" className="btn ghost block soft-red" onClick={remove}>
+          <button type="button" className="btn danger-ghost block" onClick={remove}>
             Delete income
           </button>
         )}

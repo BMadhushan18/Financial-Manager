@@ -22,7 +22,6 @@ export function RolloverSheet({
   const [error, setError] = useState<string | null>(null);
   const { busy, run } = useBusy();
   const allChosen = items.every((i) => decisions[i.id]);
-
   const setAll = (d: RolloverDecision) =>
     setDecisions(Object.fromEntries(items.map((i) => [i.id, d])));
 
@@ -30,7 +29,7 @@ export function RolloverSheet({
     run(async () => {
       try {
         await api('/api/cycle/close', { method: 'POST', body: { decisions } });
-        toast({ message: 'Done. Your new cycle is ready.' });
+        toast({ message: 'Your new cycle is ready.' });
         changed();
       } catch (e) {
         setError(errorMessage(e));
@@ -38,31 +37,35 @@ export function RolloverSheet({
     });
 
   const options: { value: RolloverDecision; label: string }[] = [
-    { value: 'next', label: 'This cycle' },
+    { value: 'next', label: 'Keep planned' },
     { value: 'idea', label: 'Back to ideas' },
     { value: 'drop', label: 'Drop' },
   ];
 
   return (
-    <Sheet title="New cycle – a quick tidy-up" onClose={onLater}>
-      <p className="muted small" style={{ marginBottom: 12 }}>
-        Your last cycle ended on {formatShort(previousEnd)}. These planned items were not bought.
-        What would you like to do with each? Nothing moves until you choose.
+    <Sheet
+      title="Start of a new cycle"
+      subtitle={`Last cycle ended ${formatShort(previousEnd)}`}
+      onClose={onLater}
+    >
+      <p className="text-2 small">
+        These planned items were not bought. Choose what happens to each one. Nothing moves until
+        you decide.
       </p>
-      <div className="row wrap" style={{ marginBottom: 8 }}>
-        <span className="small muted">Set all:</span>
+      <div className="row wrap" style={{ margin: '14px 0 6px' }}>
+        <span className="tiny muted strong">APPLY TO ALL</span>
         {options.map((o) => (
-          <button key={o.value} type="button" className="btn small" onClick={() => setAll(o.value)}>
+          <button key={o.value} type="button" className="btn sm" onClick={() => setAll(o.value)}>
             {o.label}
           </button>
         ))}
       </div>
-      <ul className="list">
+      <ul className="rows" style={{ margin: '0 -20px' }}>
         {items.map((item) => (
-          <li key={item.id} style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+          <li key={item.id} style={{ padding: '12px 20px' }} className="stack-sm">
             <div className="spread">
-              <strong className="ellipsis">{item.name}</strong>
-              <span className="amount muted">{fmt(itemTotalCents(item))}</span>
+              <span className="strong small ellipsis">{item.name}</span>
+              <span className="num muted small">{fmt(itemTotalCents(item))}</span>
             </div>
             <div className="segmented" role="group" aria-label={`What to do with ${item.name}`}>
               {options.map((o) => (
@@ -85,11 +88,15 @@ export function RolloverSheet({
         </p>
       )}
       <div className="sheet-actions">
-        <button className="btn primary" disabled={!allChosen || busy} onClick={() => void submit()}>
-          {allChosen ? 'Save choices' : 'Choose for every item'}
+        <button
+          className="btn primary lg"
+          disabled={!allChosen || busy}
+          onClick={() => void submit()}
+        >
+          {allChosen ? 'Save and continue' : 'Choose for every item'}
         </button>
         <button className="btn ghost" onClick={onLater}>
-          Later
+          Decide later
         </button>
       </div>
     </Sheet>

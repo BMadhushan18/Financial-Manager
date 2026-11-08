@@ -1,3 +1,11 @@
+import {
+  CalendarClock,
+  Hourglass,
+  PiggyBank,
+  ReceiptText,
+  ShoppingBag,
+  type LucideIcon,
+} from 'lucide-react';
 import { useState } from 'react';
 import type { CheckChoice, PurchaseWarning } from '../../shared/types';
 import type { ConfirmOptions, PendingPurchase } from '../lib/context';
@@ -15,9 +23,9 @@ export function ConfirmSheet({
   const ready = !needsTyping || typed.trim().toUpperCase() === options.typeToConfirm?.toUpperCase();
   return (
     <Sheet title={options.title} onClose={() => onDone(false)}>
-      <p className="muted">{options.message}</p>
+      <p className="text-2 small">{options.message}</p>
       {needsTyping && (
-        <div className="field" style={{ marginTop: 12 }}>
+        <div className="field" style={{ marginTop: 16 }}>
           <label htmlFor="confirm-type">
             Type <strong>{options.typeToConfirm}</strong> to confirm
           </label>
@@ -32,13 +40,13 @@ export function ConfirmSheet({
       )}
       <div className="sheet-actions">
         <button
-          className={`btn ${options.danger ? 'danger' : 'primary'}`}
+          className={`btn lg ${options.danger ? 'danger' : 'primary'}`}
           disabled={!ready}
           onClick={() => onDone(true)}
         >
           {options.confirmLabel ?? 'Confirm'}
         </button>
-        <button className="btn" onClick={() => onDone(false)}>
+        <button className="btn lg" onClick={() => onDone(false)}>
           Cancel
         </button>
       </div>
@@ -46,15 +54,15 @@ export function ConfirmSheet({
   );
 }
 
-const WARNING_ICON: Record<PurchaseWarning['code'], string> = {
-  UNPAID_BILLS: '🧾',
-  WANTS_OVER: '★',
-  SAVINGS_RISK: '🌱',
-  SHORT: '📅',
-  COOLING_OFF: '⏳',
+const WARNING_ICON: Record<PurchaseWarning['code'], LucideIcon> = {
+  UNPAID_BILLS: ReceiptText,
+  WANTS_OVER: ShoppingBag,
+  SAVINGS_RISK: PiggyBank,
+  SHORT: CalendarClock,
+  COOLING_OFF: Hourglass,
 };
 
-/** The ONE calm bottom sheet shown before a purchase when any check matches. */
+/** The ONE calm sheet shown before a purchase when any check matches. */
 export function PurchaseWarningSheet({
   pending,
   fmt,
@@ -65,30 +73,41 @@ export function PurchaseWarningSheet({
   const choose = (c: CheckChoice) => pending.resolve(c);
   const isNeed = pending.request.type === 'NEED';
   return (
-    <Sheet title={isNeed ? 'A quick heads-up' : 'Before you buy'} onClose={() => choose('cancel')}>
-      <p className="muted small" style={{ marginBottom: 12 }}>
+    <Sheet
+      title={isNeed ? 'A quick heads-up' : 'Before you buy'}
+      subtitle={`${fmt(pending.request.amount_cents)} · ${isNeed ? 'need' : 'want'}`}
+      onClose={() => choose('cancel')}
+    >
+      <p className="text-2 small" style={{ marginBottom: 14 }}>
         {isNeed
-          ? 'This looks like a need, so it may well be the right call. Here is what it means for this cycle:'
-          : `Here is what spending ${fmt(pending.request.amount_cents)} means for this cycle. It is your choice.`}
+          ? 'This looks like a need, so it may well be the right call. Here is how it affects this cycle:'
+          : 'Here is how this purchase affects your plan for this cycle. The choice is yours.'}
       </p>
-      <ul className="warning-list">
-        {pending.warnings.map((w) => (
-          <li key={w.code}>
-            <span aria-hidden="true">{WARNING_ICON[w.code]}</span>
-            <span>{w.message}</span>
-          </li>
-        ))}
+      <ul className="warn-list">
+        {pending.warnings.map((w) => {
+          const Icon = WARNING_ICON[w.code];
+          return (
+            <li key={w.code}>
+              <span className="tile" aria-hidden="true">
+                <Icon size={16} />
+              </span>
+              <span>{w.message}</span>
+            </li>
+          );
+        })}
       </ul>
       <div className="sheet-actions">
-        <button className="btn primary" onClick={() => choose('buy')}>
+        <button className="btn primary lg" onClick={() => choose('buy')}>
           Buy anyway
         </button>
-        <button className="btn" onClick={() => choose('remind')}>
-          Remind me in {pending.coolingDays} days
-        </button>
-        <button className="btn" onClick={() => choose('next_month')}>
-          Move to next month
-        </button>
+        <div className="form-grid">
+          <button className="btn" onClick={() => choose('remind')}>
+            Remind me in {pending.coolingDays} days
+          </button>
+          <button className="btn" onClick={() => choose('next_month')}>
+            Move to next month
+          </button>
+        </div>
         <button className="btn ghost" onClick={() => choose('cancel')}>
           Cancel
         </button>

@@ -145,7 +145,7 @@ function categoryFields(b: Record<string, unknown>, required: boolean) {
     name: str(b, 'name', { required, max: 40 }),
     type: oneOf(b, 'type', ENTRY_TYPES, { required }),
     priority: oneOf(b, 'priority', PRIORITIES),
-    icon: str(b, 'icon', { max: 8 }),
+    icon: str(b, 'icon', { max: 20 }),
     color: color(b, 'color'),
     monthly_limit_cents: cents(b, 'monthly_limit_cents'),
     is_archived: bool(b, 'is_archived'),
@@ -164,7 +164,7 @@ route('POST', '/api/categories', async ({ db, userId, request }) => {
       f.name,
       f.type,
       f.priority ?? 'MEDIUM',
-      f.icon ?? '🏷️',
+      f.icon ?? 'tag',
       f.color ?? '#94A3B8',
       f.monthly_limit_cents,
     )

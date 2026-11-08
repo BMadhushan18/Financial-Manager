@@ -1,9 +1,40 @@
-import { useApp } from '../../lib/context';
+import { ChevronRight, Heart, Receipt, Wallet, type LucideIcon } from 'lucide-react';
+import { useApp, type SheetState } from '../../lib/context';
 import { Sheet } from '../ui';
 import { BoughtForm } from './BoughtForm';
 import { ExpenseForm } from './ExpenseForm';
 import { IncomeForm } from './IncomeForm';
 import { WishForm } from './WishForm';
+
+const ADD_OPTIONS: {
+  kind: 'expense' | 'wish' | 'income';
+  title: string;
+  text: string;
+  icon: LucideIcon;
+  color: string;
+}[] = [
+  {
+    kind: 'expense',
+    title: 'Expense',
+    text: 'Record something you paid for',
+    icon: Receipt,
+    color: 'var(--danger)',
+  },
+  {
+    kind: 'wish',
+    title: 'Wishlist item',
+    text: 'Save something you want to buy',
+    icon: Heart,
+    color: 'var(--brand)',
+  },
+  {
+    kind: 'income',
+    title: 'Income',
+    text: 'Salary, bonus, side job or gift',
+    icon: Wallet,
+    color: 'var(--savings)',
+  },
+];
 
 /** Renders whichever add/edit sheet is open. */
 export function SheetHost() {
@@ -12,39 +43,32 @@ export function SheetHost() {
   switch (sheet.kind) {
     case 'add-menu':
       return (
-        <Sheet title="Add" onClose={closeSheet}>
-          <div className="stack" style={{ gap: 8 }}>
-            <button
-              className="btn block"
-              style={{ justifyContent: 'flex-start', minHeight: 60 }}
-              onClick={() => openSheet({ kind: 'expense' })}
-            >
-              <span aria-hidden="true">💸</span> Add expense
-              <span className="muted small" style={{ marginLeft: 'auto' }}>
-                Something you paid
-              </span>
-            </button>
-            <button
-              className="btn block"
-              style={{ justifyContent: 'flex-start', minHeight: 60 }}
-              onClick={() => openSheet({ kind: 'wish' })}
-            >
-              <span aria-hidden="true">💜</span> Add wish
-              <span className="muted small" style={{ marginLeft: 'auto' }}>
-                Something you want to buy
-              </span>
-            </button>
-            <button
-              className="btn block"
-              style={{ justifyContent: 'flex-start', minHeight: 60 }}
-              onClick={() => openSheet({ kind: 'income' })}
-            >
-              <span aria-hidden="true">💰</span> Add income
-              <span className="muted small" style={{ marginLeft: 'auto' }}>
-                Salary, bonus, gift…
-              </span>
-            </button>
-          </div>
+        <Sheet title="Add new" subtitle="What would you like to record?" onClose={closeSheet}>
+          <ul className="rows" style={{ margin: '-6px -20px' }}>
+            {ADD_OPTIONS.map((o) => (
+              <li key={o.kind}>
+                <button className="item" onClick={() => openSheet({ kind: o.kind } as SheetState)}>
+                  <span
+                    className="tile"
+                    style={{
+                      background: `color-mix(in srgb, ${o.color} 12%, transparent)`,
+                      color: o.color,
+                    }}
+                    aria-hidden="true"
+                  >
+                    <o.icon size={18} />
+                  </span>
+                  <span className="grow">
+                    <span className="item-title" style={{ display: 'block' }}>
+                      {o.title}
+                    </span>
+                    <span className="tiny muted">{o.text}</span>
+                  </span>
+                  <ChevronRight size={18} className="muted" aria-hidden="true" />
+                </button>
+              </li>
+            ))}
+          </ul>
         </Sheet>
       );
     case 'expense':

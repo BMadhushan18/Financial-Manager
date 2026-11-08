@@ -1,7 +1,29 @@
+import {
+  CalendarCheck,
+  Check,
+  Landmark,
+  PiggyBank,
+  Plus,
+  ReceiptText,
+  Target,
+  Trash2,
+  Wallet,
+} from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { centsToInput, parseMoneyToCents, ratioPercent } from '../../shared/finance';
 import type { BillInCycle, Category, Expense, FixedBill, SavingsMode } from '../../shared/types';
-import { EmptyState, Money, MoneyField, Segmented, Sheet, TypeTag } from '../components/ui';
+import { CategoryIcon } from '../components/CategoryIcon';
+import {
+  Badge,
+  EmptyState,
+  Money,
+  MoneyField,
+  PanelHead,
+  Segmented,
+  Sheet,
+  Toggle,
+  TypeBadge,
+} from '../components/ui';
 import { WishCard } from '../components/WishCard';
 import { api, errorMessage } from '../lib/api';
 import { useApp } from '../lib/context';
@@ -10,7 +32,18 @@ import { formatShort, SOURCE_LABEL } from '../lib/labels';
 
 export function Plan() {
   const app = useApp();
-  const { cycle, fmt, openSheet, toast, changed, confirm, version, isHidden, deferDelete } = app;
+  const {
+    cycle,
+    fmt,
+    openSheet,
+    toast,
+    changed,
+    confirm,
+    version,
+    isHidden,
+    deferDelete,
+    categoryById,
+  } = app;
   const [billSheet, setBillSheet] = useState<FixedBill | 'new' | null>(null);
   const [goalSheet, setGoalSheet] = useState(false);
   const [moveSheet, setMoveSheet] = useState(false);
@@ -31,14 +64,20 @@ export function Plan() {
   if (!cycle) return null;
   const t = cycle.totals;
   const fail = (e: unknown) => toast({ message: errorMessage(e), tone: 'error' });
-  const savingsNotMoved = Math.max(t.savings_goal_cents - t.savings_moved_cents, 0);
+  const savingsLeft = Math.max(t.savings_goal_cents - t.savings_moved_cents, 0);
   const allBills: FixedBill[] = app.boot?.bills ?? [];
-  const inactiveBills = allBills.filter((b) => !b.is_active);
+  const pausedBills = allBills.filter((b) => !b.is_active);
+  const incomes = cycle.incomes.filter((i) => !isHidden(`income:${i.id}`));
+  const moves = cycle.savings.moves.filter((m) => !isHidden(`move:${m.id}`));
+  const emergencyPct = ratioPercent(
+    Math.max(cycle.savings.balance_cents, 0),
+    cycle.savings.emergency_target_cents,
+  );
 
   const payBill = async (b: BillInCycle) => {
     try {
       await api(`/api/fixed-bills/${b.id}/pay`, { method: 'POST', body: {} });
-      toast({ message: `${b.name} marked paid and added to expenses.` });
+      toast({ message: `${b.name} marked as paid and added to expenses.` });
       changed();
     } catch (e) {
       fail(e);
@@ -46,7 +85,7 @@ export function Plan() {
   };
   const unpayBill = async (b: BillInCycle) => {
     const ok = await confirm({
-      title: `Mark ${b.name} unpaid?`,
+      title: `Mark ${b.name} as unpaid?`,
       message: 'The payment and its linked expense will be removed.',
       confirmLabel: 'Mark unpaid',
       danger: true,
@@ -65,69 +104,81 @@ export function Plan() {
 
   return (
     <div className="stack">
-      <section className="card" aria-labelledby="rem-h">
-        <div className="card-head">
-          <h2 id="rem-h">
-            {formatShort(cycle.cycle.start)} – {formatShort(cycle.cycle.end)}
-          </h2>
-          <span className="tiny muted">{cycle.days_left} days left</span>
+      {/* ---------- summary ---------- */}
+      <section className="panel summary">
+        <div>
+          <p className="label">
+            <Target size={16} aria-hidden="true" /> Remaining to spend this cycle
+          </p>
+          <p className={`value ${cycle.safe_to_spend_cents < 0 ? 'negative' : ''}`}>
+            {fmt(cycle.safe_to_spend_cents)}
+          </p>
+          <p className="text-2 small">
+            {formatShort(cycle.cycle.start)} – {formatShort(cycle.cycle.end)} · {cycle.days_left}{' '}
+            days left
+          </p>
         </div>
         <div className="breakdown">
-          <span>Income (received + expected)</span>
-          <Money cents={t.income_cents} />
-          <span className="muted">− Fixed bills (paid + unpaid)</span>
-          <Money cents={-t.bills_committed_cents} />
-          <span className="muted">− Savings (moved + still to move)</span>
-          <Money cents={-(t.savings_moved_cents + savingsNotMoved)} />
-          <span className="muted">− Planned wishlist items</span>
-          <Money cents={-t.reserved_cents} />
-          <span className="muted">− Other spending</span>
-          <Money cents={-t.other_expenses_cents} />
-          <span className="total">Safe to spend</span>
-          <span className={`total amount ${cycle.safe_to_spend_cents < 0 ? 'soft-red' : ''}`}>
+          <span className="label">Income</span>
+          <Money cents={t.income_cents} className="amount" />
+          <span className="minus">Fixed bills (paid + unpaid)</span>
+          <Money cents={-t.bills_committed_cents} className="amount muted" />
+          <span className="minus">Savings (moved + to move)</span>
+          <Money cents={-(t.savings_moved_cents + savingsLeft)} className="amount muted" />
+          <span className="minus">Planned purchases</span>
+          <Money cents={-t.reserved_cents} className="amount muted" />
+          <span className="minus">Other spending</span>
+          <Money cents={-t.other_expenses_cents} className="amount muted" />
+          <span className="total">Remaining</span>
+          <span className={`total amount num ${cycle.safe_to_spend_cents < 0 ? 'neg' : ''}`}>
             {fmt(cycle.safe_to_spend_cents)}
           </span>
         </div>
       </section>
 
-      {/* ---------- income ---------- */}
-      <section className="card" aria-labelledby="inc-h">
-        <div className="card-head">
-          <h2 id="inc-h">💰 Income</h2>
-          <button className="btn small" onClick={() => openSheet({ kind: 'income' })}>
-            Add
-          </button>
-        </div>
-        {cycle.incomes.filter((i) => !isHidden(`income:${i.id}`)).length === 0 ? (
-          <EmptyState
-            emoji="💰"
-            title="No income yet this cycle"
-            text="Add your salary or set it in Settings so it appears every cycle."
+      <div className="grid grid-2">
+        {/* ---------- income ---------- */}
+        <section className="panel">
+          <PanelHead
+            title="Income"
+            icon={Wallet}
+            subtitle={`${fmt(t.income_received_cents)} received · ${fmt(t.income_expected_cents)} expected`}
+            action={
+              <button className="btn sm" onClick={() => openSheet({ kind: 'income' })}>
+                <Plus size={15} /> Add
+              </button>
+            }
           />
-        ) : (
-          <ul className="list">
-            {cycle.incomes
-              .filter((i) => !isHidden(`income:${i.id}`))
-              .map((i) => (
-                <li key={i.id}>
-                  <button
-                    className="list-btn"
-                    onClick={() => openSheet({ kind: 'income', income: i })}
-                  >
-                    <span className="grow">
-                      <span style={{ display: 'block' }}>{i.note || SOURCE_LABEL[i.source]}</span>
-                      <span className="tiny muted">
-                        {SOURCE_LABEL[i.source]} · {formatShort(i.date)}{' '}
-                        <span className={`tag ${i.status === 'received' ? 'save' : 'neutral'}`}>
-                          {i.status === 'received' ? '✓ Received' : 'Expected'}
-                        </span>
+          {incomes.length === 0 ? (
+            <EmptyState
+              icon={Wallet}
+              title="No income this cycle"
+              text="Add your salary here, or set it in Settings so it appears every cycle."
+            />
+          ) : (
+            <ul className="rows">
+              {incomes.map((i) => (
+                <li key={i.id} className="row" style={{ paddingRight: 16 }}>
+                  <button className="item" onClick={() => openSheet({ kind: 'income', income: i })}>
+                    <span className="grow" style={{ minWidth: 0 }}>
+                      <span className="item-title ellipsis" style={{ display: 'block' }}>
+                        {i.note || SOURCE_LABEL[i.source]}
+                      </span>
+                      <span className="item-meta">
+                        {SOURCE_LABEL[i.source]} · {formatShort(i.date)}
+                        <Badge
+                          tone={i.status === 'received' ? 'success' : 'outline'}
+                          dot={i.status === 'received'}
+                        >
+                          {i.status === 'received' ? 'Received' : 'Expected'}
+                        </Badge>
                       </span>
                     </span>
-                    <Money cents={i.amount_cents} />
+                    <Money cents={i.amount_cents} className="item-amount" />
                   </button>
                   {i.status === 'expected' && (
                     <button
-                      className="btn small"
+                      className="btn sm"
                       onClick={async () => {
                         try {
                           await api(`/api/income/${i.id}`, {
@@ -141,153 +192,168 @@ export function Plan() {
                         }
                       }}
                     >
-                      Received
-                    </button>
-                  )}
-                </li>
-              ))}
-          </ul>
-        )}
-      </section>
-
-      {/* ---------- bills ---------- */}
-      <section className="card" aria-labelledby="bill-h">
-        <div className="card-head">
-          <h2 id="bill-h">🧾 Fixed bills</h2>
-          <button className="btn small" onClick={() => setBillSheet('new')}>
-            Add bill
-          </button>
-        </div>
-        {cycle.bills.length === 0 ? (
-          <EmptyState
-            emoji="🧾"
-            title="No fixed bills"
-            text="Add rent, loans, phone, subscriptions… they repeat every cycle."
-          />
-        ) : (
-          <>
-            <p className="small muted" style={{ marginBottom: 6 }}>
-              Paid {fmt(t.bills_paid_cents)} · still to pay {fmt(t.bills_unpaid_cents)}
-            </p>
-            <ul className="list">
-              {cycle.bills.map((b) => (
-                <li key={b.id}>
-                  <button
-                    className="list-btn"
-                    onClick={() => setBillSheet(allBills.find((x) => x.id === b.id) ?? null)}
-                  >
-                    <span className="grow">
-                      <span style={{ display: 'block' }}>{b.name}</span>
-                      <span className="tiny muted row wrap" style={{ gap: 4 }}>
-                        <TypeTag type={b.type} /> Due {formatShort(b.due_date)}
-                        {b.is_paid && b.paid_at && ` · paid ${formatShort(b.paid_at)}`}
-                      </span>
-                    </span>
-                    <Money cents={b.is_paid ? (b.paid_cents ?? b.amount_cents) : b.amount_cents} />
-                  </button>
-                  {b.is_paid ? (
-                    <button
-                      className="btn small ghost"
-                      onClick={() => void unpayBill(b)}
-                      aria-label={`${b.name} is paid. Mark unpaid`}
-                    >
-                      ✓ Paid
-                    </button>
-                  ) : (
-                    <button className="btn small" onClick={() => void payBill(b)}>
-                      Pay
+                      <Check size={15} /> Received
                     </button>
                   )}
                 </li>
               ))}
             </ul>
-          </>
-        )}
-        {inactiveBills.length > 0 && (
-          <p className="tiny muted" style={{ marginTop: 8 }}>
-            Paused bills:{' '}
-            {inactiveBills.map((b) => (
-              <button key={b.id} className="btn small ghost" onClick={() => setBillSheet(b)}>
-                {b.name}
-              </button>
-            ))}
-          </p>
-        )}
-      </section>
+          )}
+        </section>
 
-      {/* ---------- savings ---------- */}
-      <section className="card" aria-labelledby="sav-h">
-        <div className="card-head">
-          <h2 id="sav-h">🌱 Savings (pay yourself first)</h2>
-          <button className="btn small" onClick={() => setGoalSheet(true)}>
-            Edit goal
-          </button>
-        </div>
-        <div className="stat-grid">
-          <div className="stat">
-            <div className="tiny muted">Goal this cycle</div>
-            <div className="value">{fmt(t.savings_goal_cents)}</div>
-            <div className="tiny muted">
-              {cycle.savings.goal.mode === 'percent'
-                ? `${cycle.savings.goal.percent}% of income`
-                : 'fixed amount'}
-            </div>
-          </div>
-          <div className="stat">
-            <div className="tiny muted">Moved so far</div>
-            <div className="value positive">{fmt(t.savings_moved_cents)}</div>
-            <div className="tiny muted">
-              {savingsNotMoved > 0 ? `${fmt(savingsNotMoved)} to go` : 'Goal reached 🎉'}
-            </div>
-          </div>
-        </div>
-        <div className="progress" style={{ marginTop: 12 }}>
-          <div className="spread small">
-            <span>Emergency fund</span>
-            <span className="amount muted">
-              {fmt(cycle.savings.balance_cents)} of {fmt(cycle.savings.emergency_target_cents)}
-            </span>
-          </div>
-          <div
-            className="progress-track"
-            role="progressbar"
-            aria-label="Emergency fund progress"
-            aria-valuenow={ratioPercent(
-              cycle.savings.balance_cents,
-              cycle.savings.emergency_target_cents,
-            )}
-            aria-valuemin={0}
-            aria-valuemax={100}
-          >
-            <div
-              className="progress-fill"
-              style={{
-                width: `${Math.min(ratioPercent(Math.max(cycle.savings.balance_cents, 0), cycle.savings.emergency_target_cents), 100)}%`,
-                background: 'var(--savings)',
-              }}
+        {/* ---------- bills ---------- */}
+        <section className="panel">
+          <PanelHead
+            title="Fixed bills"
+            icon={ReceiptText}
+            subtitle={`${fmt(t.bills_paid_cents)} paid · ${fmt(t.bills_unpaid_cents)} to pay`}
+            action={
+              <button className="btn sm" onClick={() => setBillSheet('new')}>
+                <Plus size={15} /> Add
+              </button>
+            }
+          />
+          {cycle.bills.length === 0 ? (
+            <EmptyState
+              icon={ReceiptText}
+              title="No fixed bills"
+              text="Add rent, loans, phone and subscriptions. They repeat every cycle."
             />
+          ) : (
+            <ul className="rows">
+              {cycle.bills.map((b) => {
+                const cat = categoryById(b.category_id);
+                return (
+                  <li key={b.id} className="row" style={{ paddingRight: 16 }}>
+                    <button
+                      className="item"
+                      onClick={() => setBillSheet(allBills.find((x) => x.id === b.id) ?? null)}
+                    >
+                      <CategoryIcon
+                        icon={cat?.icon}
+                        name={cat?.name ?? b.name}
+                        color={cat?.color}
+                        size="sm"
+                      />
+                      <span className="grow" style={{ minWidth: 0 }}>
+                        <span className="item-title ellipsis" style={{ display: 'block' }}>
+                          {b.name}
+                        </span>
+                        <span className="item-meta">
+                          <TypeBadge type={b.type} />
+                          {b.is_paid && b.paid_at
+                            ? `Paid ${formatShort(b.paid_at)}`
+                            : `Due ${formatShort(b.due_date)}`}
+                        </span>
+                      </span>
+                      <Money
+                        cents={b.is_paid ? (b.paid_cents ?? b.amount_cents) : b.amount_cents}
+                        className="item-amount"
+                      />
+                    </button>
+                    {b.is_paid ? (
+                      <button
+                        className="btn sm ghost"
+                        style={{ color: 'var(--savings-text)' }}
+                        onClick={() => void unpayBill(b)}
+                        aria-label={`${b.name} is paid. Mark as unpaid`}
+                      >
+                        <Check size={15} /> Paid
+                      </button>
+                    ) : (
+                      <button className="btn sm" onClick={() => void payBill(b)}>
+                        Pay
+                      </button>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          {pausedBills.length > 0 && (
+            <div className="panel-foot row wrap small">
+              <span className="muted">Paused:</span>
+              {pausedBills.map((b) => (
+                <button key={b.id} className="btn sm ghost" onClick={() => setBillSheet(b)}>
+                  {b.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* ---------- savings ---------- */}
+        <section className="panel">
+          <PanelHead
+            title="Savings"
+            icon={PiggyBank}
+            subtitle="Pay yourself first – set aside like a bill"
+            action={
+              <button className="btn sm" onClick={() => setGoalSheet(true)}>
+                Edit goal
+              </button>
+            }
+          />
+          <div className="panel-body stack">
+            <div className="stats">
+              <div className="stat">
+                <div className="label">Goal this cycle</div>
+                <div className="value">{fmt(t.savings_goal_cents)}</div>
+                <div className="sub">
+                  {cycle.savings.goal.mode === 'percent'
+                    ? `${cycle.savings.goal.percent}% of income`
+                    : 'Fixed amount'}
+                </div>
+              </div>
+              <div className="stat">
+                <div className="label">Moved so far</div>
+                <div className="value pos">{fmt(t.savings_moved_cents)}</div>
+                <div className="sub">
+                  {savingsLeft > 0 ? `${fmt(savingsLeft)} to go` : 'Goal reached'}
+                </div>
+              </div>
+            </div>
+            <div className="progress">
+              <div className="spread small">
+                <span className="strong">Emergency fund</span>
+                <span className="num muted">
+                  {fmt(cycle.savings.balance_cents)} of {fmt(cycle.savings.emergency_target_cents)}
+                </span>
+              </div>
+              <div
+                className="track"
+                role="progressbar"
+                aria-label="Emergency fund progress"
+                aria-valuenow={emergencyPct}
+                aria-valuemin={0}
+                aria-valuemax={100}
+              >
+                <div
+                  className="fill"
+                  style={{ width: `${Math.min(emergencyPct, 100)}%`, background: 'var(--savings)' }}
+                />
+              </div>
+              <span className="tiny muted">{emergencyPct}% of target</span>
+            </div>
+            <button className="btn block" onClick={() => setMoveSheet(true)}>
+              <Landmark size={16} /> Move money to savings
+            </button>
           </div>
-        </div>
-        <button className="btn block" style={{ marginTop: 12 }} onClick={() => setMoveSheet(true)}>
-          Move money to savings
-        </button>
-        {cycle.savings.moves.filter((m) => !isHidden(`move:${m.id}`)).length > 0 && (
-          <ul className="list small" style={{ marginTop: 8 }}>
-            {cycle.savings.moves
-              .filter((m) => !isHidden(`move:${m.id}`))
-              .map((m) => (
-                <li key={m.id}>
-                  <span className="grow">
+          {moves.length > 0 && (
+            <ul className="rows" style={{ borderTop: '1px solid var(--border)' }}>
+              {moves.map((m) => (
+                <li key={m.id} className="item" style={{ minHeight: 52 }}>
+                  <span className="grow small">
                     {m.note || (m.amount_cents > 0 ? 'Moved to savings' : 'Taken from savings')}
                     <span className="tiny muted"> · {formatShort(m.date)}</span>
                   </span>
                   <Money
                     cents={m.amount_cents}
                     signed
-                    className={m.amount_cents > 0 ? 'positive' : 'soft-red'}
+                    className={`item-amount ${m.amount_cents > 0 ? 'pos' : 'neg'}`}
                   />
                   <button
-                    className="btn small ghost"
+                    className="icon-btn sm"
                     aria-label="Delete this savings entry"
                     onClick={() =>
                       deferDelete(`move:${m.id}`, 'Savings entry deleted.', () =>
@@ -295,66 +361,74 @@ export function Plan() {
                       )
                     }
                   >
-                    ✕
+                    <Trash2 size={15} />
                   </button>
                 </li>
               ))}
-          </ul>
-        )}
-      </section>
+            </ul>
+          )}
+        </section>
 
-      {/* ---------- planned ---------- */}
-      <section className="stack" style={{ gap: 10 }} aria-labelledby="pl-h">
-        <div className="spread">
-          <h2 id="pl-h">🗓️ Planned purchases</h2>
-          <span className="small muted">{fmt(t.reserved_cents)} set aside</span>
-        </div>
-        {cycle.planned.length === 0 ? (
-          <div className="card">
+        {/* ---------- planned ---------- */}
+        <section className="panel">
+          <PanelHead
+            title="Planned purchases"
+            icon={CalendarCheck}
+            subtitle={`${fmt(t.reserved_cents)} set aside this cycle`}
+            action={
+              <a className="btn sm" href="#/wishlist">
+                Wishlist
+              </a>
+            }
+          />
+          {cycle.planned.length === 0 ? (
             <EmptyState
-              emoji="🗓️"
+              icon={CalendarCheck}
               title="Nothing planned"
-              text="Plan wishlist items to set their price aside this cycle."
-              action={
-                <a className="btn" href="#/wishlist">
-                  Open wishlist
-                </a>
-              }
+              text="Plan wishlist items for this month to set their price aside."
             />
-          </div>
-        ) : (
-          cycle.planned.map((item) => <WishCard key={item.id} item={item} />)
-        )}
-      </section>
+          ) : (
+            <div>
+              {cycle.planned.map((item) => (
+                <WishCard key={item.id} item={item} />
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
 
       {/* ---------- category budgets ---------- */}
-      <section className="card" aria-labelledby="bud-h">
-        <div className="card-head">
-          <h2 id="bud-h">Category budgets</h2>
-        </div>
-        <p className="small muted" style={{ marginBottom: 8 }}>
-          Optional monthly limits. Tap a category to set one.
-        </p>
-        <ul className="list">
+      <section className="panel">
+        <PanelHead
+          title="Category budgets"
+          icon={Target}
+          subtitle="Optional monthly limits. Select a category to set one."
+        />
+        <ul className="rows">
           {app.activeCategories.map((c) => {
             const spent = spentByCategory.get(c.id) ?? 0;
             const limit = c.monthly_limit_cents;
             const pct = limit ? ratioPercent(spent, limit) : 0;
             return (
               <li key={c.id}>
-                <button className="list-btn" onClick={() => setLimitFor(c)}>
-                  <span className="icon-dot" aria-hidden="true">
-                    {c.icon}
-                  </span>
-                  <span className="grow">
-                    <span style={{ display: 'block' }}>{c.name}</span>
+                <button className="item" onClick={() => setLimitFor(c)}>
+                  <CategoryIcon icon={c.icon} name={c.name} color={c.color} size="sm" />
+                  <span className="grow" style={{ minWidth: 0 }}>
+                    <span className="row" style={{ justifyContent: 'space-between' }}>
+                      <span className="item-title">{c.name}</span>
+                      <span className="num small">
+                        <strong>{fmt(spent)}</strong>
+                        {limit ? (
+                          <span className="muted"> / {fmt(limit)}</span>
+                        ) : (
+                          <span className="muted"> · no limit</span>
+                        )}
+                      </span>
+                    </span>
                     {limit ? (
-                      <span
-                        className="progress-track"
-                        style={{ display: 'block', height: 6, marginTop: 4 }}
-                      >
+                      <span className="track" style={{ display: 'block', marginTop: 8, height: 6 }}>
                         <span
-                          className="progress-fill"
+                          className="fill"
                           style={{
                             display: 'block',
                             width: `${Math.min(pct, 100)}%`,
@@ -367,13 +441,7 @@ export function Plan() {
                           }}
                         />
                       </span>
-                    ) : (
-                      <span className="tiny muted">No limit</span>
-                    )}
-                  </span>
-                  <span className="amount small">
-                    {fmt(spent)}
-                    {limit ? <span className="muted"> / {fmt(limit)}</span> : null}
+                    ) : null}
                   </span>
                 </button>
               </li>
@@ -389,13 +457,13 @@ export function Plan() {
         />
       )}
       {goalSheet && <GoalSheet onClose={() => setGoalSheet(false)} />}
-      {moveSheet && <MoveSheet onClose={() => setMoveSheet(false)} suggested={savingsNotMoved} />}
+      {moveSheet && <MoveSheet onClose={() => setMoveSheet(false)} suggested={savingsLeft} />}
       {limitFor && <LimitSheet category={limitFor} onClose={() => setLimitFor(null)} />}
     </div>
   );
 }
 
-/* ---------------- small sheets ---------------- */
+/* ---------------- sheets ---------------- */
 
 export function BillSheet({ bill, onClose }: { bill: FixedBill | null; onClose: () => void }) {
   const { activeCategories, toast, changed, confirm } = useApp();
@@ -416,7 +484,7 @@ export function BillSheet({ bill, onClose }: { bill: FixedBill | null; onClose: 
       if (!name.trim()) return setError('Please name the bill.');
       if (cents === null || cents <= 0) return setError('Please enter the amount.');
       if (!Number.isInteger(day) || day < 1 || day > 31)
-        return setError('Due day must be 1 to 31.');
+        return setError('Due day must be between 1 and 31.');
       const body = {
         name: name.trim(),
         amount_cents: cents,
@@ -454,7 +522,11 @@ export function BillSheet({ bill, onClose }: { bill: FixedBill | null; onClose: 
   };
 
   return (
-    <Sheet title={bill ? 'Edit bill' : 'Add a fixed bill'} onClose={onClose}>
+    <Sheet
+      title={bill ? 'Edit bill' : 'New fixed bill'}
+      subtitle="Repeats every cycle"
+      onClose={onClose}
+    >
       <form
         className="stack"
         onSubmit={(e) => {
@@ -474,8 +546,8 @@ export function BillSheet({ bill, onClose }: { bill: FixedBill | null; onClose: 
             placeholder="e.g. House rent"
           />
         </div>
-        <MoneyField label="Amount" value={amount} onChange={setAmount} />
-        <div className="grid-2">
+        <div className="form-grid">
+          <MoneyField label="Amount" value={amount} onChange={setAmount} />
           <div className="field">
             <label htmlFor="bill-day">Due day of month</label>
             <input
@@ -489,39 +561,41 @@ export function BillSheet({ bill, onClose }: { bill: FixedBill | null; onClose: 
               onChange={(e) => setDueDay(e.target.value)}
             />
           </div>
-          <div className="field">
-            <label htmlFor="bill-cat">Category</label>
-            <select
-              id="bill-cat"
-              className="input"
-              value={categoryId ?? ''}
-              onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : null)}
-            >
-              <option value="">None (need)</option>
-              {activeCategories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.icon} {c.name}
-                </option>
-              ))}
-            </select>
-          </div>
+        </div>
+        <div className="field">
+          <label htmlFor="bill-cat">Category</label>
+          <select
+            id="bill-cat"
+            className="input"
+            value={categoryId ?? ''}
+            onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : null)}
+          >
+            <option value="">None (counted as a need)</option>
+            {activeCategories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
         </div>
         {bill && (
-          <label className="switch">
-            <span>Active (repeats every cycle)</span>
-            <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} />
-          </label>
+          <Toggle
+            label="Active"
+            description="Inactive bills are paused and not counted."
+            checked={active}
+            onChange={setActive}
+          />
         )}
         {error && (
           <p className="field-error" role="alert">
             {error}
           </p>
         )}
-        <button className="btn primary block" disabled={busy} type="submit">
-          Save
+        <button className="btn primary lg block" disabled={busy} type="submit">
+          {bill ? 'Save changes' : 'Add bill'}
         </button>
         {bill && (
-          <button type="button" className="btn ghost block soft-red" onClick={() => void remove()}>
+          <button type="button" className="btn danger-ghost block" onClick={() => void remove()}>
             Delete bill
           </button>
         )}
@@ -543,7 +617,7 @@ export function GoalSheet({ onClose }: { onClose: () => void }) {
       const pct = Number(percent);
       const cents = parseMoneyToCents(amount || '0');
       if (mode === 'percent' && (!Number.isInteger(pct) || pct < 0 || pct > 100))
-        return setError('Percent must be 0 to 100.');
+        return setError('Percent must be between 0 and 100.');
       if (mode === 'amount' && (cents === null || cents < 0))
         return setError('Please enter an amount.');
       try {
@@ -559,7 +633,7 @@ export function GoalSheet({ onClose }: { onClose: () => void }) {
       }
     });
   return (
-    <Sheet title="Savings goal" onClose={onClose}>
+    <Sheet title="Savings goal" subtitle="How much to set aside each cycle" onClose={onClose}>
       <form
         className="stack"
         onSubmit={(e) => {
@@ -571,7 +645,7 @@ export function GoalSheet({ onClose }: { onClose: () => void }) {
           label="Goal type"
           value={mode}
           options={[
-            { value: 'percent', label: '% of income' },
+            { value: 'percent', label: 'Percent of income' },
             { value: 'amount', label: 'Fixed amount' },
           ]}
           onChange={setMode}
@@ -599,7 +673,7 @@ export function GoalSheet({ onClose }: { onClose: () => void }) {
             {error}
           </p>
         )}
-        <button className="btn primary block" disabled={busy} type="submit">
+        <button className="btn primary lg block" disabled={busy} type="submit">
           Save goal
         </button>
       </form>
@@ -627,9 +701,7 @@ function MoveSheet({ onClose, suggested }: { onClose: () => void; suggested: num
             note: note.trim() || null,
           },
         });
-        toast({
-          message: direction === 'in' ? 'Nice – moved to savings. 🌱' : 'Taken from savings.',
-        });
+        toast({ message: direction === 'in' ? 'Moved to savings.' : 'Withdrawal recorded.' });
         changed();
         onClose();
       } catch (e) {
@@ -637,7 +709,7 @@ function MoveSheet({ onClose, suggested }: { onClose: () => void; suggested: num
       }
     });
   return (
-    <Sheet title="Savings" onClose={onClose}>
+    <Sheet title="Savings transfer" onClose={onClose}>
       <form
         className="stack"
         onSubmit={(e) => {
@@ -649,8 +721,8 @@ function MoveSheet({ onClose, suggested }: { onClose: () => void; suggested: num
           label="Direction"
           value={direction}
           options={[
-            { value: 'in', label: 'Put into savings' },
-            { value: 'out', label: 'Take out' },
+            { value: 'in', label: 'Deposit to savings' },
+            { value: 'out', label: 'Withdraw' },
           ]}
           onChange={setDirection}
         />
@@ -671,7 +743,7 @@ function MoveSheet({ onClose, suggested }: { onClose: () => void; suggested: num
             {error}
           </p>
         )}
-        <button className="btn primary block" disabled={busy} type="submit">
+        <button className="btn primary lg block" disabled={busy} type="submit">
           Save
         </button>
       </form>
@@ -702,7 +774,7 @@ function LimitSheet({ category, onClose }: { category: Category; onClose: () => 
       }
     });
   return (
-    <Sheet title={`${category.icon} ${category.name} budget`} onClose={onClose}>
+    <Sheet title={`${category.name} budget`} subtitle="Monthly spending limit" onClose={onClose}>
       <form
         className="stack"
         onSubmit={(e) => {
@@ -722,8 +794,8 @@ function LimitSheet({ category, onClose }: { category: Category; onClose: () => 
             {error}
           </p>
         )}
-        <button className="btn primary block" disabled={busy} type="submit">
-          Save
+        <button className="btn primary lg block" disabled={busy} type="submit">
+          Save budget
         </button>
         {category.monthly_limit_cents !== null && (
           <button type="button" className="btn ghost block" onClick={() => void save(true)}>

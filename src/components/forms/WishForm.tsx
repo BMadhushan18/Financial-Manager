@@ -1,3 +1,4 @@
+import { ChevronDown, Lightbulb } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { centsToInput, parseMoneyToCents, suggestType } from '../../../shared/finance';
 import {
@@ -15,7 +16,7 @@ import { useBusy } from '../../lib/hooks';
 import { formatDate, PRIORITY_LABEL, URGENCY_LABEL } from '../../lib/labels';
 import { MoneyField, Segmented, Sheet } from '../ui';
 
-/** Add or edit a wish. Only the name is required. */
+/** Add or edit a wishlist item. Only the name is required. */
 export function WishForm({ item, onClose }: { item?: WishlistItem; onClose: () => void }) {
   const { activeCategories, categoryById, toast, changed, fmt, confirm } = useApp();
   const editing = Boolean(item);
@@ -46,12 +47,12 @@ export function WishForm({ item, onClose }: { item?: WishlistItem; onClose: () =
   const save = () =>
     run(async () => {
       if (!name.trim()) {
-        setError('Please give your wish a name.');
+        setError('Please give the item a name.');
         return;
       }
       const cents = price.trim() ? parseMoneyToCents(price) : null;
       if (price.trim() && (cents === null || cents < 0)) {
-        setError('Please enter a price like 15000 or 15,000.50');
+        setError('Please enter a price like 15000 or 15,000.50.');
         return;
       }
       const qty = Number(quantity);
@@ -79,10 +80,10 @@ export function WishForm({ item, onClose }: { item?: WishlistItem; onClose: () =
       try {
         if (item) {
           await api(`/api/wishlist/${item.id}`, { method: 'PUT', body });
-          toast({ message: 'Wish updated.' });
+          toast({ message: 'Wishlist item updated.' });
         } else {
           await api('/api/wishlist', { method: 'POST', body });
-          toast({ message: `${body.name} added to your wishlist.` });
+          toast({ message: `"${body.name}" added to your wishlist.` });
         }
         changed();
         onClose();
@@ -94,10 +95,10 @@ export function WishForm({ item, onClose }: { item?: WishlistItem; onClose: () =
   const remove = async () => {
     if (!item) return;
     const ok = await confirm({
-      title: 'Delete this wish?',
+      title: 'Delete this item permanently?',
       message:
         item.status === 'BOUGHT'
-          ? 'The wish is removed from history. The expense stays, because the money was spent.'
+          ? 'The item is removed from history. Its expense stays, because the money was spent.'
           : 'It will be removed for good. Tip: "Drop" keeps it in history and counts the money saved.',
       confirmLabel: 'Delete',
       danger: true,
@@ -105,7 +106,7 @@ export function WishForm({ item, onClose }: { item?: WishlistItem; onClose: () =
     if (!ok) return;
     try {
       await api(`/api/wishlist/${item.id}`, { method: 'DELETE' });
-      toast({ message: 'Wish deleted.' });
+      toast({ message: 'Item deleted.' });
       changed();
       onClose();
     } catch (e) {
@@ -114,7 +115,11 @@ export function WishForm({ item, onClose }: { item?: WishlistItem; onClose: () =
   };
 
   return (
-    <Sheet title={editing ? 'Edit wish' : 'Add a wish'} onClose={onClose}>
+    <Sheet
+      title={editing ? 'Edit wishlist item' : 'New wishlist item'}
+      subtitle={editing ? undefined : 'Only the name is required. Add details any time.'}
+      onClose={onClose}
+    >
       <form
         className="stack"
         onSubmit={(e) => {
@@ -123,7 +128,7 @@ export function WishForm({ item, onClose }: { item?: WishlistItem; onClose: () =
         }}
       >
         <div className="field">
-          <label htmlFor="wish-name">What do you want?</label>
+          <label htmlFor="wish-name">Item name</label>
           <input
             id="wish-name"
             className="input"
@@ -135,54 +140,51 @@ export function WishForm({ item, onClose }: { item?: WishlistItem; onClose: () =
           />
         </div>
 
-        <MoneyField
-          label="Estimated price"
-          value={price}
-          onChange={setPrice}
-          hint="Optional – you can add it later"
-        />
-
-        <div className="field">
-          <label htmlFor="wish-cat">Category</label>
-          <select
-            id="wish-cat"
-            className="input"
-            value={categoryId ?? ''}
-            onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : null)}
-          >
-            <option value="">No category</option>
-            {activeCategories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.icon} {c.name} ({c.type === 'NEED' ? 'need' : 'want'})
-              </option>
-            ))}
-          </select>
+        <div className="form-grid">
+          <MoneyField label="Estimated price" value={price} onChange={setPrice} />
+          <div className="field">
+            <label htmlFor="wish-cat">Category</label>
+            <select
+              id="wish-cat"
+              className="input"
+              value={categoryId ?? ''}
+              onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : null)}
+            >
+              <option value="">No category</option>
+              {activeCategories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name} ({c.type === 'NEED' ? 'need' : 'want'})
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        <div className="stack" style={{ gap: 6 }}>
+        <div className="stack-sm">
           <Segmented
-            label="Need or want?"
+            label="Need or want"
             value={type}
             options={[
-              { value: 'NEED', label: '● Need' },
-              { value: 'WANT', label: '★ Want' },
+              { value: 'NEED', label: 'Need' },
+              { value: 'WANT', label: 'Want' },
             ]}
             onChange={setTypeChoice}
           />
-          <span className="hint">
-            {typeChoice === null || typeChoice === suggestion.type ? (
-              <>💡 {suggestion.reason}</>
-            ) : (
-              <>
-                You chose {type === 'NEED' ? 'NEED' : 'WANT'}. ({suggestion.reason}.)
-              </>
-            )}
-          </span>
+          <div className="callout" style={{ padding: '8px 12px' }}>
+            <Lightbulb size={16} className="muted" />
+            <span className="small">
+              {typeChoice === null || typeChoice === suggestion.type
+                ? suggestion.reason
+                : `You chose ${type}. (${suggestion.reason}.)`}
+            </span>
+          </div>
         </div>
 
         <details className="more" open={editing}>
-          <summary>Priority, urgency and more</summary>
-          <div className="stack" style={{ marginTop: 8 }}>
+          <summary>
+            Priority, urgency and more <ChevronDown size={16} />
+          </summary>
+          <div className="stack" style={{ marginTop: 12 }}>
             <Segmented
               label="How important is it to you?"
               value={priority}
@@ -195,7 +197,7 @@ export function WishForm({ item, onClose }: { item?: WishlistItem; onClose: () =
               options={URGENCIES.map((u) => ({ value: u, label: URGENCY_LABEL[u] }))}
               onChange={setUrgency}
             />
-            <div className="grid-2">
+            <div className="form-grid">
               <div className="field">
                 <label htmlFor="wish-qty">Quantity</label>
                 <input
@@ -236,13 +238,15 @@ export function WishForm({ item, onClose }: { item?: WishlistItem; onClose: () =
         </details>
 
         {history.length > 1 && (
-          <div className="card flat">
-            <h3 style={{ marginBottom: 6 }}>Price history</h3>
-            <ul className="list small">
+          <div className="panel">
+            <div className="panel-head" style={{ minHeight: 0, padding: '10px 16px' }}>
+              <h3>Price history</h3>
+            </div>
+            <ul className="rows">
               {history.map((h) => (
-                <li key={h.id} style={{ minHeight: 36, padding: '4px 0' }}>
-                  <span className="grow muted">{formatDate(h.changed_at)}</span>
-                  <span className="amount">{fmt(h.price_cents)}</span>
+                <li key={h.id} className="spread small" style={{ padding: '8px 16px' }}>
+                  <span className="muted">{formatDate(h.changed_at)}</span>
+                  <span className="num strong">{fmt(h.price_cents)}</span>
                 </li>
               ))}
             </ul>
@@ -254,12 +258,12 @@ export function WishForm({ item, onClose }: { item?: WishlistItem; onClose: () =
             {error}
           </p>
         )}
-        <button className="btn primary block" type="submit" disabled={busy}>
+        <button className="btn primary lg block" type="submit" disabled={busy}>
           {busy ? 'Saving…' : editing ? 'Save changes' : 'Add to wishlist'}
         </button>
         {editing && (
-          <button type="button" className="btn ghost block soft-red" onClick={() => void remove()}>
-            Delete wish
+          <button type="button" className="btn danger-ghost block" onClick={() => void remove()}>
+            Delete permanently
           </button>
         )}
       </form>

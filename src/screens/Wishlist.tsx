@@ -1,3 +1,4 @@
+import { CalendarCheck, Heart, Leaf, Plus, ShoppingBag } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import {
   itemTotalCents,
@@ -7,7 +8,7 @@ import {
   type WishSort,
 } from '../../shared/finance';
 import { URGENCIES, type EntryType, type Urgency, type WishlistItem } from '../../shared/types';
-import { EmptyState, ErrorBox, LoadingCards } from '../components/ui';
+import { EmptyState, ErrorBox, LoadingPanels } from '../components/ui';
 import { WishCard } from '../components/WishCard';
 import { useApp } from '../lib/context';
 import { readLocal, useApi, writeLocal } from '../lib/hooks';
@@ -78,131 +79,160 @@ export function Wishlist() {
     0,
   );
   const showScore = tab === 'ideas' || tab === 'month';
+  const totalLabel =
+    tab === 'dropped' ? 'Money saved' : tab === 'bought' ? 'Total spent' : 'Estimated total';
+  const emptyIcon =
+    tab === 'bought'
+      ? ShoppingBag
+      : tab === 'dropped'
+        ? Leaf
+        : tab === 'month'
+          ? CalendarCheck
+          : Heart;
 
   return (
     <div className="stack">
-      <div className="tabs" role="tablist" aria-label="Wishlist sections">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            role="tab"
-            aria-selected={tab === t.id}
-            onClick={() => {
-              setTab(t.id);
-              writeLocal('mm-wish-tab', t.id);
-            }}
-          >
-            {t.label} <span className="muted">({counts[t.id]})</span>
-          </button>
-        ))}
+      <div className="toolbar">
+        <p className="text-2 small" style={{ maxWidth: 560 }}>
+          Your lifetime list of things to buy. Plan items into this month to set money aside, then
+          mark them bought to record the expense.
+        </p>
+        <button className="btn primary" onClick={() => openSheet({ kind: 'wish' })}>
+          <Plus size={17} /> Add item
+        </button>
       </div>
 
-      <div className="filters" aria-label="Filters">
-        <select
-          className="input"
-          aria-label="Filter by need or want"
-          value={type}
-          onChange={(e) => setType(e.target.value as '' | EntryType)}
-        >
-          <option value="">Needs & wants</option>
-          <option value="NEED">● Needs only</option>
-          <option value="WANT">★ Wants only</option>
-        </select>
-        <select
-          className="input"
-          aria-label="Filter by category"
-          value={categoryId}
-          onChange={(e) => setCategoryId(e.target.value)}
-        >
-          <option value="">All categories</option>
-          {activeCategories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.icon} {c.name}
-            </option>
+      <section className="panel">
+        <div className="tabs" role="tablist" aria-label="Wishlist sections">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              role="tab"
+              aria-selected={tab === t.id}
+              onClick={() => {
+                setTab(t.id);
+                writeLocal('mm-wish-tab', t.id);
+              }}
+            >
+              {t.label}
+              <span className="count">{counts[t.id]}</span>
+            </button>
           ))}
-        </select>
-        <select
-          className="input"
-          aria-label="Filter by urgency"
-          value={urgency}
-          onChange={(e) => setUrgency(e.target.value as '' | Urgency)}
-        >
-          <option value="">Any urgency</option>
-          {URGENCIES.map((u) => (
-            <option key={u} value={u}>
-              {URGENCY_LABEL[u]}
-            </option>
-          ))}
-        </select>
-        {showScore && (
+        </div>
+
+        <div className="filters" aria-label="Filters">
           <select
             className="input"
-            aria-label="Sort by"
-            value={sort}
-            onChange={(e) => setSort(e.target.value as WishSort)}
+            aria-label="Filter by need or want"
+            value={type}
+            onChange={(e) => setType(e.target.value as '' | EntryType)}
           >
-            <option value="score">Sort: priority</option>
-            <option value="price">Sort: price</option>
-            <option value="date">Sort: newest</option>
+            <option value="">Needs and wants</option>
+            <option value="NEED">Needs only</option>
+            <option value="WANT">Wants only</option>
           </select>
+          <select
+            className="input"
+            aria-label="Filter by category"
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
+          >
+            <option value="">All categories</option>
+            {activeCategories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+          <select
+            className="input"
+            aria-label="Filter by urgency"
+            value={urgency}
+            onChange={(e) => setUrgency(e.target.value as '' | Urgency)}
+          >
+            <option value="">Any urgency</option>
+            {URGENCIES.map((u) => (
+              <option key={u} value={u}>
+                {URGENCY_LABEL[u]}
+              </option>
+            ))}
+          </select>
+          {showScore && (
+            <select
+              className="input"
+              aria-label="Sort by"
+              value={sort}
+              onChange={(e) => setSort(e.target.value as WishSort)}
+            >
+              <option value="score">Sort by priority</option>
+              <option value="price">Sort by price</option>
+              <option value="date">Sort by newest</option>
+            </select>
+          )}
+        </div>
+
+        {error && (
+          <div className="panel-body">
+            <ErrorBox message={error} onRetry={reload} />
+          </div>
         )}
-      </div>
-
-      {list.length > 0 && (
-        <p className="small muted">
-          {list.length} {list.length === 1 ? 'item' : 'items'} ·{' '}
-          {tab === 'dropped' ? 'money saved' : tab === 'bought' ? 'spent' : 'total'}{' '}
-          <strong>{fmt(total)}</strong>
-          {showScore && ' · Score = need, urgency, your priority and whether it fits this month'}
-        </p>
-      )}
-
-      {error && <ErrorBox message={error} onRetry={reload} />}
-      {loading && !data ? (
-        <LoadingCards count={4} />
-      ) : list.length === 0 ? (
-        <div className="card">
+        {loading && !data ? (
+          <div className="panel-body">
+            <LoadingPanels count={2} />
+          </div>
+        ) : list.length === 0 ? (
           <EmptyState
-            emoji={
-              tab === 'bought' ? '🛍️' : tab === 'dropped' ? '🍃' : tab === 'month' ? '🗓️' : '💜'
-            }
+            icon={emptyIcon}
             title={
               tab === 'month'
-                ? 'Nothing planned this month'
+                ? 'Nothing planned for this month'
                 : tab === 'bought'
-                  ? 'Nothing bought yet'
+                  ? 'No purchases yet'
                   : tab === 'dropped'
-                    ? 'No dropped wishes'
-                    : 'No wishes here'
+                    ? 'No dropped items'
+                    : 'No items here'
             }
             text={
               tab === 'month'
-                ? 'Pick ideas and tap "Plan this month" to set their price aside.'
+                ? 'Open an idea’s menu and choose "Plan for this month" to set its price aside.'
                 : tab === 'dropped'
                   ? 'Dropping a want you no longer need counts as money saved.'
-                  : 'Add anything you want to buy – only the name is needed.'
+                  : 'Add anything you would like to buy. Only the name is needed.'
             }
             action={
               tab === 'ideas' ? (
                 <button className="btn primary" onClick={() => openSheet({ kind: 'wish' })}>
-                  Add a wish
+                  <Plus size={16} /> Add item
                 </button>
               ) : undefined
             }
           />
-        </div>
-      ) : (
-        <div className="stack" style={{ gap: 10 }}>
-          {list.map((w) => (
-            <WishCard
-              key={w.item.id}
-              item={w.item}
-              score={showScore ? w.score : undefined}
-              label={showScore ? w.label : undefined}
-            />
-          ))}
-        </div>
-      )}
+        ) : (
+          <div>
+            {list.map((w) => (
+              <WishCard
+                key={w.item.id}
+                item={w.item}
+                score={showScore ? w.score : undefined}
+                label={showScore ? w.label : undefined}
+              />
+            ))}
+          </div>
+        )}
+
+        {list.length > 0 && (
+          <div className="panel-foot spread small">
+            <span className="muted">
+              {list.length} {list.length === 1 ? 'item' : 'items'}
+              {showScore && ' · score = need + urgency + your priority + fits this month'}
+            </span>
+            <span>
+              <span className="muted">{totalLabel} </span>
+              <strong className="num">{fmt(total)}</strong>
+            </span>
+          </div>
+        )}
+      </section>
     </div>
   );
 }

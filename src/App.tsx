@@ -1,10 +1,24 @@
+import {
+  BarChart3,
+  CalendarRange,
+  Eye,
+  EyeOff,
+  Heart,
+  LayoutDashboard,
+  LogOut,
+  Plus,
+  Receipt,
+  Settings as SettingsIcon,
+  type LucideIcon,
+} from 'lucide-react';
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
-import { Icon } from './components/Icon';
+import { Logo, LogoMark } from './components/Logo';
 import { RolloverSheet } from './components/RolloverSheet';
-import { ErrorBox, LoadingCards } from './components/ui';
+import { ErrorBox, LoadingPanels } from './components/ui';
 import { api } from './lib/api';
 import { useApp } from './lib/context';
 import { useHashRoute } from './lib/hooks';
+import { formatShort } from './lib/labels';
 import { Expenses } from './screens/Expenses';
 import { Home } from './screens/Home';
 import { ForcedPasswordChange, Login } from './screens/Login';
@@ -16,22 +30,38 @@ import { Wishlist } from './screens/Wishlist';
 // Reports (and Chart.js inside it) load only when opened.
 const Reports = lazy(() => import('./screens/Reports'));
 
-const TITLES: Record<string, string> = {
-  home: 'MoneyMind',
-  wishlist: 'Wishlist',
-  expenses: 'Expenses',
-  plan: 'Plan this cycle',
-  reports: 'Reports',
-  settings: 'Settings',
-};
+interface NavEntry {
+  route: string;
+  label: string;
+  icon: LucideIcon;
+  title: string;
+}
 
-const NAV = [
-  { route: 'home', label: 'Home', icon: 'home' },
-  { route: 'wishlist', label: 'Wishlist', icon: 'heart' },
-  { route: 'add', label: 'Add', icon: 'plus' },
-  { route: 'expenses', label: 'Expenses', icon: 'list' },
-  { route: 'reports', label: 'Reports', icon: 'chart' },
+const NAV: { section: string; items: NavEntry[] }[] = [
+  {
+    section: 'Overview',
+    items: [
+      { route: 'home', label: 'Dashboard', icon: LayoutDashboard, title: 'Dashboard' },
+      { route: 'wishlist', label: 'Wishlist', icon: Heart, title: 'Wishlist' },
+      { route: 'expenses', label: 'Expenses', icon: Receipt, title: 'Expenses' },
+    ],
+  },
+  {
+    section: 'Planning',
+    items: [
+      { route: 'plan', label: 'Budget plan', icon: CalendarRange, title: 'Budget plan' },
+      { route: 'reports', label: 'Reports', icon: BarChart3, title: 'Reports' },
+    ],
+  },
+  {
+    section: 'Account',
+    items: [{ route: 'settings', label: 'Settings', icon: SettingsIcon, title: 'Settings' }],
+  },
 ];
+const ALL = NAV.flatMap((s) => s.items);
+const MOBILE_NAV = ['home', 'wishlist', 'add', 'expenses', 'reports'];
+
+const href = (route: string) => `#/${route === 'home' ? '' : route}`;
 
 export function App() {
   const app = useApp();
@@ -53,9 +83,9 @@ export function App() {
   if (app.auth === 'must-change') return <ForcedPasswordChange />;
   if (loadError && !boot) {
     return (
-      <main>
-        <div className="stack" style={{ marginTop: 48 }}>
-          <h1>MoneyMind</h1>
+      <main className="auth-main">
+        <div className="auth-card stack">
+          <Logo />
           <ErrorBox message={loadError} onRetry={() => void refresh()} />
         </div>
       </main>
@@ -63,15 +93,19 @@ export function App() {
   }
   if (!boot || !cycle) {
     return (
-      <main>
-        <LoadingCards count={3} />
+      <main className="page" style={{ maxWidth: 720 }}>
+        <LoadingPanels count={3} />
       </main>
     );
   }
   if (!boot.settings.onboarded) return <Onboarding onDone={changed} />;
 
+  const current = ALL.find((n) => n.route === route) ?? ALL[0]!;
+  const displayName = boot.username ?? boot.email;
+  const cycleLabel = `Cycle ${formatShort(cycle.cycle.start)} – ${formatShort(cycle.cycle.end)} · ${cycle.days_left} days left`;
+
   const screen = (() => {
-    switch (route) {
+    switch (current.route) {
       case 'wishlist':
         return <Wishlist />;
       case 'expenses':
@@ -80,7 +114,7 @@ export function App() {
         return <Plan />;
       case 'reports':
         return (
-          <Suspense fallback={<LoadingCards count={2} />}>
+          <Suspense fallback={<LoadingPanels count={2} />}>
             <Reports />
           </Suspense>
         );
@@ -92,78 +126,125 @@ export function App() {
   })();
 
   return (
-    <div className="app">
-      <header className="topbar">
-        <h1>
-          {route === 'home' || !TITLES[route] ? (
-            <span className="brand">
-              <img src="/icon.svg" alt="" /> MoneyMind
-            </span>
-          ) : (
-            TITLES[route]
+    <div className="layout">
+      <aside className="sidebar" aria-label="Main navigation">
+        <Logo />
+        <nav>
+          {NAV.map((s) => (
+            <div key={s.section}>
+              <div className="nav-section">{s.section}</div>
+              {s.items.map((n) => (
+                <a
+                  key={n.route}
+                  className="nav-link"
+                  href={href(n.route)}
+                  aria-current={current.route === n.route ? 'page' : undefined}
+                >
+                  <n.icon size={18} />
+                  {n.label}
+                </a>
+              ))}
+            </div>
+          ))}
+        </nav>
+        <div className="sidebar-foot">
+          <span className="avatar" aria-hidden="true">
+            {displayName.slice(0, 2)}
+          </span>
+          <div className="grow">
+            <div className="small strong ellipsis">{displayName}</div>
+            <div className="tiny muted">
+              {boot.settings.currency} ·{' '}
+              {boot.auth_method === 'password' ? 'Signed in' : 'Cloudflare Access'}
+            </div>
+          </div>
+          {boot.auth_method === 'password' && (
+            <button
+              className="icon-btn sm"
+              onClick={() => void app.signOut()}
+              aria-label="Sign out"
+              title="Sign out"
+            >
+              <LogOut size={17} />
+            </button>
           )}
-        </h1>
-        <button
-          className="icon-btn"
-          onClick={app.togglePrivacy}
-          aria-pressed={app.privacy}
-          aria-label={app.privacy ? 'Show amounts' : 'Hide amounts'}
-          title={app.privacy ? 'Show amounts' : 'Hide amounts'}
-        >
-          <Icon name={app.privacy ? 'eyeOff' : 'eye'} />
-        </button>
-        <a className="icon-btn" href="#/plan" aria-label="Plan this cycle" title="Plan">
-          <Icon name="plan" />
-        </a>
-        <a className="icon-btn" href="#/settings" aria-label="Settings" title="Settings">
-          <Icon name="settings" />
-        </a>
-      </header>
+        </div>
+      </aside>
 
-      <main id="main">{screen}</main>
+      <div className="main-col">
+        <header className="topbar">
+          <a href="#/" className="hide-desktop" aria-label="Dashboard">
+            <LogoMark />
+          </a>
+          <div className="topbar-title">
+            <h1>{current.title}</h1>
+            <p>{cycleLabel}</p>
+          </div>
+          <button
+            className="icon-btn"
+            onClick={app.togglePrivacy}
+            aria-pressed={app.privacy}
+            aria-label={app.privacy ? 'Show amounts' : 'Hide amounts'}
+            title={app.privacy ? 'Show amounts' : 'Hide amounts'}
+          >
+            {app.privacy ? <EyeOff size={19} /> : <Eye size={19} />}
+          </button>
+          <a
+            className="icon-btn hide-desktop"
+            href="#/plan"
+            aria-label="Budget plan"
+            title="Budget plan"
+          >
+            <CalendarRange size={19} />
+          </a>
+          <a
+            className="icon-btn hide-desktop"
+            href="#/settings"
+            aria-label="Settings"
+            title="Settings"
+          >
+            <SettingsIcon size={19} />
+          </a>
+          <button
+            className="btn primary hide-mobile"
+            onClick={() => app.openSheet({ kind: 'add-menu' })}
+          >
+            <Plus size={17} /> Add new
+          </button>
+        </header>
+
+        <main className="page" id="main">
+          {screen}
+        </main>
+      </div>
 
       <nav className="bottom-nav" aria-label="Main">
-        {NAV.map((n) =>
-          n.route === 'add' ? (
-            <div className="nav-add" key="add">
-              <button
-                onClick={() => app.openSheet({ kind: 'add-menu' })}
-                aria-label="Add expense, wish or income"
-              >
-                <Icon name="plus" />
-                <span className="hide-mobile" style={{ marginLeft: 6, fontWeight: 650 }}>
-                  Add
-                </span>
-              </button>
-            </div>
-          ) : (
+        {MOBILE_NAV.map((r) => {
+          if (r === 'add') {
+            return (
+              <div className="bn-add" key="add">
+                <button
+                  onClick={() => app.openSheet({ kind: 'add-menu' })}
+                  aria-label="Add expense, wishlist item or income"
+                >
+                  <Plus size={24} />
+                </button>
+              </div>
+            );
+          }
+          const n = ALL.find((x) => x.route === r)!;
+          return (
             <a
-              key={n.route}
-              className="nav-item"
-              href={`#/${n.route === 'home' ? '' : n.route}`}
-              aria-current={route === n.route ? 'page' : undefined}
+              key={r}
+              className="bn-item"
+              href={href(r)}
+              aria-current={current.route === r ? 'page' : undefined}
             >
-              <Icon name={n.icon} />
-              {n.label}
+              <n.icon size={21} />
+              {n.label === 'Dashboard' ? 'Home' : n.label}
             </a>
-          ),
-        )}
-        <a
-          className="nav-item hide-mobile"
-          href="#/plan"
-          aria-current={route === 'plan' ? 'page' : undefined}
-        >
-          <Icon name="plan" />
-          Plan
-        </a>
-        <a
-          className="nav-item hide-mobile"
-          href="#/settings"
-          aria-current={route === 'settings' ? 'page' : undefined}
-        >
-          <Icon name="settings" />
-          Settings
-        </a>
+          );
+        })}
       </nav>
 
       {cycle.rollover && !rolloverLater && (

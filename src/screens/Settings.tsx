@@ -1,9 +1,32 @@
+import {
+  CalendarCog,
+  Database,
+  Download,
+  KeyRound,
+  LogOut,
+  PieChart,
+  Plus,
+  ReceiptText,
+  ShieldAlert,
+  Tags,
+  Trash2,
+  Upload,
+  UserRound,
+} from 'lucide-react';
 import { useRef, useState } from 'react';
 import { CURRENCIES } from '../../shared/defaults';
 import { centsToInput, parseMoneyToCents } from '../../shared/finance';
 import type { Category, CycleMode, EntryType, Settings as SettingsT } from '../../shared/types';
-import { Icon } from '../components/Icon';
-import { MoneyField, Segmented, Sheet, TypeTag } from '../components/ui';
+import { CATEGORY_ICONS, CategoryIcon, categoryIconKey } from '../components/CategoryIcon';
+import {
+  Badge,
+  MoneyField,
+  PanelHead,
+  Segmented,
+  Sheet,
+  Toggle,
+  TypeBadge,
+} from '../components/ui';
 import { api, ApiError, errorMessage } from '../lib/api';
 import { useApp } from '../lib/context';
 import { useBusy } from '../lib/hooks';
@@ -42,11 +65,13 @@ export function Settings() {
     run(async () => {
       const salary = parseMoneyToCents(form.salary || '0');
       if (salary === null || salary < 0) return setError('Please check the salary amount.');
-      if (splitTotal !== 100)
-        return setError(`Needs + wants + savings must add up to 100% (now ${splitTotal}%).`);
+      if (splitTotal !== 100) {
+        return setError(`Needs, wants and savings must add up to 100% (currently ${splitTotal}%).`);
+      }
       const target = form.emergency_target.trim() ? parseMoneyToCents(form.emergency_target) : null;
-      if (form.emergency_target.trim() && (target === null || target < 0))
+      if (form.emergency_target.trim() && (target === null || target < 0)) {
         return setError('Please check the emergency fund target.');
+      }
       const body: Partial<Record<keyof SettingsT, unknown>> = {
         salary_cents: salary,
         salary_day: Number(form.salary_day),
@@ -91,7 +116,7 @@ export function Settings() {
       parsed = JSON.parse(await file.text());
     } catch {
       toast({
-        message: 'That file is not valid JSON. Pick a MoneyMind backup file.',
+        message: 'That file is not valid JSON. Choose a MoneyMind backup file.',
         tone: 'error',
       });
       return;
@@ -117,14 +142,15 @@ export function Settings() {
   const deleteAll = async () => {
     const first = await confirm({
       title: 'Delete all your data?',
-      message: 'This removes every expense, wish, bill, income and setting. It cannot be undone.',
+      message:
+        'This removes every expense, wishlist item, bill, income entry and setting. It cannot be undone.',
       confirmLabel: 'Continue',
       danger: true,
     });
     if (!first) return;
     const second = await confirm({
       title: 'Are you completely sure?',
-      message: 'Last step. Your data will be gone for good.',
+      message: 'This is the last step. Your data will be permanently deleted.',
       confirmLabel: 'Delete everything',
       danger: true,
       typeToConfirm: 'DELETE',
@@ -132,7 +158,7 @@ export function Settings() {
     if (!second) return;
     try {
       await api('/api/data', { method: 'DELETE', body: { confirm: 'DELETE' } });
-      toast({ message: 'All data deleted. Starting fresh.' });
+      toast({ message: 'All data deleted.' });
       changed();
     } catch (e) {
       toast({ message: errorMessage(e), tone: 'error' });
@@ -140,7 +166,7 @@ export function Settings() {
   };
 
   return (
-    <div className="stack">
+    <div className="stack" style={{ maxWidth: 880 }}>
       <form
         className="stack"
         onSubmit={(e) => {
@@ -148,170 +174,188 @@ export function Settings() {
           void save();
         }}
       >
-        <section className="card stack">
-          <h2>Pay cycle</h2>
-          <MoneyField
-            label="Monthly salary"
-            value={form.salary}
-            onChange={(v) => set('salary', v)}
-            hint="Added as expected income at the start of each cycle."
+        <section className="panel">
+          <PanelHead
+            title="Pay cycle"
+            icon={CalendarCog}
+            subtitle="Defines what “this month” means across the app"
           />
-          <Segmented<CycleMode>
-            label="My month runs"
-            value={form.cycle_mode}
-            options={[
-              { value: 'salary', label: 'Salary day to salary day' },
-              { value: 'calendar', label: 'Calendar month' },
-            ]}
-            onChange={(v) => set('cycle_mode', v)}
-          />
-          <div className="grid-2">
-            <div className="field">
-              <label htmlFor="set-day">Salary day</label>
-              <input
-                id="set-day"
-                className="input"
-                type="number"
-                min={1}
-                max={31}
-                inputMode="numeric"
-                value={form.salary_day}
-                onChange={(e) => set('salary_day', e.target.value)}
+          <div className="panel-body stack">
+            <div className="form-grid">
+              <MoneyField
+                label="Monthly salary"
+                value={form.salary}
+                onChange={(v) => set('salary', v)}
+                hint="Added as expected income each cycle"
               />
+              <div className="field">
+                <label htmlFor="set-cur">Currency</label>
+                <select
+                  id="set-cur"
+                  className="input"
+                  value={form.currency}
+                  onChange={(e) => set('currency', e.target.value)}
+                >
+                  {CURRENCIES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-            <div className="field">
-              <label htmlFor="set-cur">Currency</label>
-              <select
-                id="set-cur"
-                className="input"
-                value={form.currency}
-                onChange={(e) => set('currency', e.target.value)}
-              >
-                {CURRENCIES.map((c) => (
-                  <option key={c.code} value={c.code}>
-                    {c.label}
-                  </option>
-                ))}
-              </select>
+            <div className="form-grid">
+              <Segmented<CycleMode>
+                label="Cycle type"
+                value={form.cycle_mode}
+                options={[
+                  { value: 'salary', label: 'Salary to salary' },
+                  { value: 'calendar', label: 'Calendar month' },
+                ]}
+                onChange={(v) => set('cycle_mode', v)}
+              />
+              <div className="field">
+                <label htmlFor="set-day">Salary day</label>
+                <input
+                  id="set-day"
+                  className="input"
+                  type="number"
+                  min={1}
+                  max={31}
+                  inputMode="numeric"
+                  value={form.salary_day}
+                  onChange={(e) => set('salary_day', e.target.value)}
+                />
+              </div>
             </div>
+            <p className="hint">
+              If the salary day does not exist in a month (for example the 31st), the last day of
+              that month is used.
+            </p>
           </div>
-          <p className="hint">
-            If the day does not exist in a month (like the 31st), the last day of that month is
-            used.
-          </p>
         </section>
 
-        <section className="card stack">
-          <h2>Budget split</h2>
-          <div className="grid-2" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
-            <div className="field">
-              <label htmlFor="sp-n">● Needs %</label>
-              <input
-                id="sp-n"
-                className="input"
-                type="number"
-                min={0}
-                max={100}
-                inputMode="numeric"
-                value={form.needs}
-                onChange={(e) => set('needs', e.target.value)}
+        <section className="panel">
+          <PanelHead
+            title="Budget split"
+            icon={PieChart}
+            subtitle="How income is divided. The 50/30/20 rule is a good starting point."
+          />
+          <div className="panel-body stack-sm">
+            <div className="form-grid three">
+              <div className="field">
+                <label htmlFor="sp-n">Needs %</label>
+                <input
+                  id="sp-n"
+                  className="input"
+                  type="number"
+                  min={0}
+                  max={100}
+                  inputMode="numeric"
+                  value={form.needs}
+                  onChange={(e) => set('needs', e.target.value)}
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="sp-w">Wants %</label>
+                <input
+                  id="sp-w"
+                  className="input"
+                  type="number"
+                  min={0}
+                  max={100}
+                  inputMode="numeric"
+                  value={form.wants}
+                  onChange={(e) => set('wants', e.target.value)}
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="sp-s">Savings %</label>
+                <input
+                  id="sp-s"
+                  className="input"
+                  type="number"
+                  min={0}
+                  max={100}
+                  inputMode="numeric"
+                  value={form.savings}
+                  onChange={(e) => set('savings', e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="split-bar" aria-hidden="true">
+              <div style={{ width: `${Number(form.needs) || 0}%`, background: 'var(--needs)' }} />
+              <div style={{ width: `${Number(form.wants) || 0}%`, background: 'var(--wants)' }} />
+              <div
+                style={{ width: `${Number(form.savings) || 0}%`, background: 'var(--savings)' }}
               />
             </div>
-            <div className="field">
-              <label htmlFor="sp-w">★ Wants %</label>
-              <input
-                id="sp-w"
-                className="input"
-                type="number"
-                min={0}
-                max={100}
-                inputMode="numeric"
-                value={form.wants}
-                onChange={(e) => set('wants', e.target.value)}
-              />
-            </div>
-            <div className="field">
-              <label htmlFor="sp-s">🌱 Savings %</label>
-              <input
-                id="sp-s"
-                className="input"
-                type="number"
-                min={0}
-                max={100}
-                inputMode="numeric"
-                value={form.savings}
-                onChange={(e) => set('savings', e.target.value)}
-              />
-            </div>
+            <p className={`hint ${splitTotal !== 100 ? 'neg' : ''}`}>
+              Total {splitTotal}%{splitTotal !== 100 ? ' – must equal 100%' : ''}
+            </p>
           </div>
-          <p className={`hint ${splitTotal !== 100 ? 'soft-red' : ''}`}>
-            Total {splitTotal}%{splitTotal !== 100 ? ' – must be 100%' : ''}. The 50/30/20 rule is a
-            good start.
-          </p>
         </section>
 
-        <section className="card stack">
-          <h2>Smart warnings</h2>
-          <label className="switch">
-            <span>Show a calm check before buying wants</span>
-            <input
-              type="checkbox"
+        <section className="panel">
+          <PanelHead
+            title="Purchase warnings"
+            icon={ShieldAlert}
+            subtitle="A calm check before buying wants. It never blocks you."
+          />
+          <div className="panel-body stack">
+            <Toggle
+              label="Show a check before buying wants"
+              description="Covers unpaid bills, wants budget, savings and big recent wants"
               checked={form.warnings_enabled}
-              onChange={(e) => set('warnings_enabled', e.target.checked)}
+              onChange={(v) => set('warnings_enabled', v)}
             />
-          </label>
-          <div className="grid-2">
-            <div className="field">
-              <label htmlFor="set-big">"Big want" is over (% of income)</label>
-              <input
-                id="set-big"
-                className="input"
-                type="number"
-                min={1}
-                max={100}
-                inputMode="numeric"
-                value={form.big_want_percent}
-                onChange={(e) => set('big_want_percent', e.target.value)}
+            <div className="form-grid">
+              <div className="field">
+                <label htmlFor="set-big">Big want threshold (% of income)</label>
+                <input
+                  id="set-big"
+                  className="input"
+                  type="number"
+                  min={1}
+                  max={100}
+                  inputMode="numeric"
+                  value={form.big_want_percent}
+                  onChange={(e) => set('big_want_percent', e.target.value)}
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="set-cool">Cooling-off period (days)</label>
+                <input
+                  id="set-cool"
+                  className="input"
+                  type="number"
+                  min={0}
+                  max={90}
+                  inputMode="numeric"
+                  value={form.cooling_days}
+                  onChange={(e) => set('cooling_days', e.target.value)}
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="set-em">Emergency fund (months of needs)</label>
+                <input
+                  id="set-em"
+                  className="input"
+                  type="number"
+                  min={0}
+                  max={24}
+                  inputMode="numeric"
+                  value={form.emergency_months}
+                  onChange={(e) => set('emergency_months', e.target.value)}
+                />
+              </div>
+              <MoneyField
+                label="Or a fixed emergency target"
+                value={form.emergency_target}
+                onChange={(v) => set('emergency_target', v)}
+                hint="Leave empty to use months"
               />
             </div>
-            <div className="field">
-              <label htmlFor="set-cool">Cooling-off days</label>
-              <input
-                id="set-cool"
-                className="input"
-                type="number"
-                min={0}
-                max={90}
-                inputMode="numeric"
-                value={form.cooling_days}
-                onChange={(e) => set('cooling_days', e.target.value)}
-              />
-            </div>
-          </div>
-        </section>
-
-        <section className="card stack">
-          <h2>Emergency fund</h2>
-          <div className="grid-2">
-            <div className="field">
-              <label htmlFor="set-em">Months of needs</label>
-              <input
-                id="set-em"
-                className="input"
-                type="number"
-                min={0}
-                max={24}
-                inputMode="numeric"
-                value={form.emergency_months}
-                onChange={(e) => set('emergency_months', e.target.value)}
-              />
-            </div>
-            <MoneyField
-              label="Or a fixed target"
-              value={form.emergency_target}
-              onChange={(v) => set('emergency_target', v)}
-              hint="Leave empty to use months."
-            />
           </div>
         </section>
 
@@ -320,121 +364,148 @@ export function Settings() {
             {error}
           </p>
         )}
-        <button className="btn primary block" type="submit" disabled={busy}>
-          {busy ? 'Saving…' : 'Save settings'}
-        </button>
-      </form>
-
-      <section className="card">
-        <div className="card-head">
-          <h2>Categories</h2>
-          <button className="btn small" onClick={() => setCatSheet('new')}>
-            Add
+        <div className="row" style={{ justifyContent: 'flex-end' }}>
+          <button className="btn primary lg" type="submit" disabled={busy}>
+            {busy ? 'Saving…' : 'Save settings'}
           </button>
         </div>
-        <ul className="list">
+      </form>
+
+      <section className="panel">
+        <PanelHead
+          title="Categories"
+          icon={Tags}
+          subtitle="Each category is labelled as a need or a want"
+          action={
+            <button className="btn sm" onClick={() => setCatSheet('new')}>
+              <Plus size={15} /> Add
+            </button>
+          }
+        />
+        <ul className="rows">
           {app.categories.map((c) => (
             <li key={c.id}>
-              <button className="list-btn" onClick={() => setCatSheet(c)}>
-                <span className="icon-dot" aria-hidden="true">
-                  {c.icon}
-                </span>
-                <span className="grow">
-                  {c.name}
-                  {c.is_archived && (
-                    <span className="tag neutral" style={{ marginLeft: 6 }}>
-                      Hidden
-                    </span>
-                  )}
-                </span>
-                <TypeTag type={c.type} />
+              <button className="item" onClick={() => setCatSheet(c)}>
+                <CategoryIcon icon={c.icon} name={c.name} color={c.color} size="sm" />
+                <span className="grow item-title">{c.name}</span>
+                {c.is_archived && <Badge tone="outline">Hidden</Badge>}
+                <TypeBadge type={c.type} />
               </button>
             </li>
           ))}
         </ul>
       </section>
 
-      <section className="card">
-        <div className="card-head">
-          <h2>Fixed bills</h2>
-          <button className="btn small" onClick={() => setBillSheet('new')}>
-            Add
-          </button>
-        </div>
+      <section className="panel">
+        <PanelHead
+          title="Fixed bills"
+          icon={ReceiptText}
+          action={
+            <button className="btn sm" onClick={() => setBillSheet('new')}>
+              <Plus size={15} /> Add
+            </button>
+          }
+        />
         {boot!.bills.length === 0 ? (
-          <p className="muted small">No bills yet.</p>
+          <p className="panel-body muted small">No fixed bills yet.</p>
         ) : (
-          <ul className="list">
-            {boot!.bills.map((b) => (
-              <li key={b.id}>
-                <button className="list-btn" onClick={() => setBillSheet(b.id)}>
-                  <span className="grow">
-                    {b.name}{' '}
-                    <span className="tiny muted">
-                      · day {b.due_day}
-                      {!b.is_active && ' · paused'}
+          <ul className="rows">
+            {boot!.bills.map((b) => {
+              const cat = app.categoryById(b.category_id);
+              return (
+                <li key={b.id}>
+                  <button className="item" onClick={() => setBillSheet(b.id)}>
+                    <CategoryIcon
+                      icon={cat?.icon}
+                      name={cat?.name ?? b.name}
+                      color={cat?.color}
+                      size="sm"
+                    />
+                    <span className="grow">
+                      <span className="item-title" style={{ display: 'block' }}>
+                        {b.name}
+                      </span>
+                      <span className="item-meta">
+                        Due on day {b.due_day}
+                        {!b.is_active && ' · paused'}
+                      </span>
                     </span>
-                  </span>
-                  <span className="amount">{app.fmt(b.amount_cents)}</span>
-                </button>
-              </li>
-            ))}
+                    <span className="item-amount">{app.fmt(b.amount_cents)}</span>
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>
 
-      <section className="card stack">
-        <h2>Backup</h2>
-        <button className="btn block" onClick={() => void exportJson()}>
-          <Icon name="download" /> Export JSON backup
-        </button>
-        <button className="btn block" onClick={() => fileRef.current?.click()}>
-          <Icon name="upload" /> Import JSON backup
-        </button>
-        <input
-          ref={fileRef}
-          type="file"
-          accept="application/json,.json"
-          hidden
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            e.target.value = '';
-            if (f) void importJson(f);
-          }}
-        />
-      </section>
-
-      <section className="card stack">
-        <h2>Account</h2>
-        <p className="small">
-          Signed in as <strong>{boot!.username ?? boot!.email}</strong>
-        </p>
-        {boot!.auth_method === 'password' ? (
-          <>
-            <button className="btn block" onClick={() => setPwSheet(true)}>
-              Change password
+      <div className="grid grid-2">
+        <section className="panel">
+          <PanelHead
+            title="Data and backup"
+            icon={Database}
+            subtitle="A JSON file with everything"
+          />
+          <div className="panel-body stack-sm">
+            <button className="btn block" onClick={() => void exportJson()}>
+              <Download size={16} /> Export backup
             </button>
-            <button className="btn block" onClick={() => void app.signOut()}>
-              Sign out
+            <button className="btn block" onClick={() => fileRef.current?.click()}>
+              <Upload size={16} /> Restore from backup
             </button>
-          </>
-        ) : (
-          <a className="btn block" href="/cdn-cgi/access/logout">
-            Sign out
-          </a>
-        )}
-        <button className="btn block soft-red" onClick={() => void deleteAll()}>
-          Delete all my data
-        </button>
-      </section>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="application/json,.json"
+              hidden
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                e.target.value = '';
+                if (f) void importJson(f);
+              }}
+            />
+          </div>
+        </section>
 
-      <p className="tiny muted" style={{ textAlign: 'center' }}>
-        MoneyMind gives guidance, not financial advice. Your data stays in your own Cloudflare
-        account.
+        <section className="panel">
+          <PanelHead
+            title="Account"
+            icon={UserRound}
+            subtitle={`Signed in as ${boot!.username ?? boot!.email}`}
+          />
+          <div className="panel-body stack-sm">
+            {boot!.auth_method === 'password' ? (
+              <>
+                <button className="btn block" onClick={() => setPwSheet(true)}>
+                  <KeyRound size={16} /> Change password
+                </button>
+                <button className="btn block" onClick={() => void app.signOut()}>
+                  <LogOut size={16} /> Sign out
+                </button>
+              </>
+            ) : (
+              <a className="btn block" href="/cdn-cgi/access/logout">
+                <LogOut size={16} /> Sign out
+              </a>
+            )}
+            <button className="btn danger-ghost block" onClick={() => void deleteAll()}>
+              <Trash2 size={16} /> Delete all my data
+            </button>
+          </div>
+        </section>
+      </div>
+
+      <p className="disclaimer">
+        MoneyMind provides guidance, not financial advice. Your data is stored in your own
+        Cloudflare account.
       </p>
 
       {pwSheet && (
-        <Sheet title="Change password" onClose={() => setPwSheet(false)}>
+        <Sheet
+          title="Change password"
+          subtitle="Other devices will be signed out"
+          onClose={() => setPwSheet(false)}
+        >
           <ChangePasswordForm
             username={boot!.username}
             onDone={() => {
@@ -460,38 +531,27 @@ export function Settings() {
   );
 }
 
-const ICONS = [
-  '🏷️',
-  '🛒',
-  '🏠',
-  '🚌',
-  '💊',
-  '💡',
-  '📚',
-  '📶',
-  '🛡️',
-  '🏦',
-  '🍜',
-  '🎬',
-  '📺',
-  '🎧',
-  '👕',
-  '🎨',
-  '🎁',
-  '✈️',
-  '🐶',
-  '👶',
-  '💇',
-  '🏋️',
-  '⛽',
-  '🧹',
+const COLORS = [
+  '#0EA5E9',
+  '#0284C7',
+  '#14B8A6',
+  '#16A34A',
+  '#6366F1',
+  '#8B5CF6',
+  '#EC4899',
+  '#F43F5E',
+  '#F59E0B',
+  '#F97316',
+  '#64748B',
+  '#94A3B8',
 ];
 
 function CategorySheet({ category, onClose }: { category: Category | null; onClose: () => void }) {
   const { toast, changed, confirm, categories } = useApp();
   const [name, setName] = useState(category?.name ?? '');
   const [type, setType] = useState<EntryType>(category?.type ?? 'WANT');
-  const [icon, setIcon] = useState(category?.icon ?? '🏷️');
+  const [icon, setIcon] = useState(categoryIconKey(category?.icon, category?.name));
+  const [color, setColor] = useState(category?.color ?? '#6366F1');
   const [archived, setArchived] = useState(category?.is_archived ?? false);
   const [moveTo, setMoveTo] = useState<string>('');
   const [needsMove, setNeedsMove] = useState<number | null>(null);
@@ -501,7 +561,13 @@ function CategorySheet({ category, onClose }: { category: Category | null; onClo
   const save = () =>
     run(async () => {
       if (!name.trim()) return setError('Please name the category.');
-      const body = { name: name.trim(), type, icon, is_archived: archived };
+      const body = {
+        name: name.trim(),
+        type,
+        icon,
+        color: color.toUpperCase(),
+        is_archived: archived,
+      };
       try {
         if (category) await api(`/api/categories/${category.id}`, { method: 'PUT', body });
         else await api('/api/categories', { method: 'POST', body });
@@ -550,64 +616,96 @@ function CategorySheet({ category, onClose }: { category: Category | null; onClo
           void save();
         }}
       >
-        <div className="field">
-          <label htmlFor="cat-name">Name</label>
-          <input
-            id="cat-name"
-            className="input"
-            value={name}
-            maxLength={40}
-            autoFocus
-            onChange={(e) => setName(e.target.value)}
-          />
+        <div className="row" style={{ gap: 12 }}>
+          <CategoryIcon icon={icon} name={name} color={color} />
+          <div className="field grow">
+            <label htmlFor="cat-name">Name</label>
+            <input
+              id="cat-name"
+              className="input"
+              value={name}
+              maxLength={40}
+              autoFocus
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
         </div>
         <Segmented
-          label="Need or want?"
+          label="Need or want"
           value={type}
           options={[
-            { value: 'NEED', label: '● Need' },
-            { value: 'WANT', label: '★ Want' },
+            { value: 'NEED', label: 'Need' },
+            { value: 'WANT', label: 'Want' },
           ]}
           onChange={setType}
         />
         <div className="field">
           <span className="label">Icon</span>
           <div className="row wrap" role="group" aria-label="Icon">
-            {ICONS.map((i) => (
+            {Object.entries(CATEGORY_ICONS).map(([key, Icon]) => (
               <button
-                key={i}
+                key={key}
                 type="button"
-                className="chip"
-                style={{ minHeight: 44, width: 48 }}
-                aria-pressed={icon === i}
-                aria-label={`Icon ${i}`}
-                onClick={() => setIcon(i)}
+                className="icon-btn"
+                style={
+                  icon === key
+                    ? {
+                        background: 'var(--brand-soft)',
+                        color: 'var(--brand)',
+                        boxShadow: '0 0 0 1px var(--brand)',
+                      }
+                    : { border: '1px solid var(--border)' }
+                }
+                aria-pressed={icon === key}
+                aria-label={`Icon ${key}`}
+                onClick={() => setIcon(key)}
               >
-                <span className="emoji">{i}</span>
+                <Icon size={18} />
               </button>
             ))}
           </div>
         </div>
+        <div className="field">
+          <span className="label">Colour</span>
+          <div className="row wrap" role="group" aria-label="Colour">
+            {COLORS.map((c) => (
+              <button
+                key={c}
+                type="button"
+                aria-label={`Colour ${c}`}
+                aria-pressed={color.toUpperCase() === c}
+                onClick={() => setColor(c)}
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 8,
+                  border: '2px solid var(--surface)',
+                  background: c,
+                  cursor: 'pointer',
+                  boxShadow: color.toUpperCase() === c ? `0 0 0 2px ${c}` : 'none',
+                }}
+              />
+            ))}
+          </div>
+        </div>
         {category && (
-          <label className="switch">
-            <span>Hide from lists (keeps history)</span>
-            <input
-              type="checkbox"
-              checked={archived}
-              onChange={(e) => setArchived(e.target.checked)}
-            />
-          </label>
+          <Toggle
+            label="Hide from lists"
+            description="Keeps its history"
+            checked={archived}
+            onChange={setArchived}
+          />
         )}
         {error && (
           <p className="field-error" role="alert">
             {error}
           </p>
         )}
-        <button className="btn primary block" type="submit" disabled={busy}>
-          Save
+        <button className="btn primary lg block" type="submit" disabled={busy}>
+          Save category
         </button>
         {category && (
-          <div className="card flat stack" style={{ gap: 8 }}>
+          <div className="stack-sm">
             {needsMove !== null && (
               <div className="field">
                 <label htmlFor="cat-move">
@@ -624,7 +722,7 @@ function CategorySheet({ category, onClose }: { category: Category | null; onClo
                     .filter((c) => c.id !== category.id)
                     .map((c) => (
                       <option key={c.id} value={c.id}>
-                        {c.icon} {c.name}
+                        {c.name}
                       </option>
                     ))}
                 </select>
@@ -632,7 +730,7 @@ function CategorySheet({ category, onClose }: { category: Category | null; onClo
             )}
             <button
               type="button"
-              className="btn ghost block soft-red"
+              className="btn danger-ghost block"
               disabled={busy || (needsMove !== null && !moveTo)}
               onClick={() => void remove()}
             >

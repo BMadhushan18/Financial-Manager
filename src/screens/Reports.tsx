@@ -2,8 +2,15 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Chart as ChartType, ChartConfiguration } from 'chart.js';
 import { centsToInput, lastCycles, ratioPercent } from '../../shared/finance';
 import type { Expense, ReportsResponse } from '../../shared/types';
-import { Icon } from '../components/Icon';
-import { EmptyState, ErrorBox, LoadingCards, Money } from '../components/ui';
+import { BarChart3, Download, Leaf, LifeBuoy, Scale, TrendingUp } from 'lucide-react';
+import {
+  EmptyState,
+  ErrorBox,
+  LoadingPanels,
+  Money,
+  PanelHead,
+  PeriodSwitcher,
+} from '../components/ui';
 import { api, errorMessage } from '../lib/api';
 import { useApp } from '../lib/context';
 import { useApi } from '../lib/hooks';
@@ -107,8 +114,8 @@ export default function Reports() {
           {
             label: 'Income',
             data: series('income_cents'),
-            borderColor: cssVar('--primary'),
-            backgroundColor: cssVar('--primary'),
+            borderColor: cssVar('--brand'),
+            backgroundColor: cssVar('--brand'),
             tension: 0.3,
           },
           {
@@ -201,183 +208,169 @@ export default function Reports() {
 
   const sum = data?.summary;
   const needsWantsTotal = (sum?.needs_cents ?? 0) + (sum?.wants_cents ?? 0);
+  const needsPct = ratioPercent(sum?.needs_cents ?? 0, needsWantsTotal);
+  const emergencyPct = data
+    ? ratioPercent(Math.max(data.emergency.balance_cents, 0), data.emergency.target_cents)
+    : 0;
 
   return (
     <div className="stack">
-      <div className="card flat spread" style={{ padding: 8 }}>
-        <button
-          className="icon-btn"
-          disabled={index >= cycles.length - 1}
-          onClick={() => setIndex((i) => i + 1)}
-          aria-label="Older cycle"
-        >
-          <Icon name="left" />
-        </button>
-        <div style={{ textAlign: 'center' }}>
-          <strong>
-            {formatShort(range.start)} – {formatShort(range.end)}
-          </strong>
-          <div className="tiny muted">
-            {index === 0 ? 'This cycle' : `${index} cycle${index > 1 ? 's' : ''} ago`}
-          </div>
-        </div>
-        <button
-          className="icon-btn"
-          disabled={index === 0}
-          onClick={() => setIndex((i) => i - 1)}
-          aria-label="Newer cycle"
-        >
-          <Icon name="right" />
+      <div className="toolbar">
+        <PeriodSwitcher
+          label={`${formatShort(range.start)} – ${formatShort(range.end)}`}
+          sub={index === 0 ? 'Current cycle' : `${index} cycle${index > 1 ? 's' : ''} ago`}
+          onPrev={() => setIndex((i) => i + 1)}
+          onNext={() => setIndex((i) => i - 1)}
+          prevDisabled={index >= cycles.length - 1}
+          nextDisabled={index === 0}
+        />
+        <button className="btn" onClick={() => void exportCsv()}>
+          <Download size={16} /> Export CSV
         </button>
       </div>
 
       {error && <ErrorBox message={error} onRetry={reload} />}
       {loading && !data ? (
-        <LoadingCards count={3} />
+        <LoadingPanels count={3} />
       ) : data && sum ? (
         <>
-          <section className="card" aria-labelledby="sum-h">
-            <h2 id="sum-h" style={{ marginBottom: 12 }}>
-              Cycle summary
-            </h2>
-            <div className="stat-grid">
-              <div className="stat">
-                <div className="tiny muted">Income</div>
-                <div className="value">{fmt(sum.income_cents)}</div>
-              </div>
-              <div className="stat">
-                <div className="tiny muted">Spent</div>
-                <div className="value">{fmt(sum.spent_cents)}</div>
-              </div>
-              <div className="stat">
-                <div className="tiny muted">Saved</div>
-                <div className="value positive">{fmt(sum.saved_cents)}</div>
-              </div>
-              <div className="stat">
-                <div className="tiny muted">Savings rate</div>
-                <div className="value">{data.savings_rate_percent}%</div>
-              </div>
+          <section className="kpis" aria-label="Cycle summary">
+            <div className="panel kpi">
+              <span className="kpi-label">Income</span>
+              <span className="kpi-value">{fmt(sum.income_cents)}</span>
             </div>
-            <div style={{ marginTop: 14 }}>
-              <div className="spread small">
-                <span>
-                  <span className="tag need">
-                    ● Needs {ratioPercent(sum.needs_cents, needsWantsTotal)}%
-                  </span>{' '}
-                  <span className="tag want">
-                    ★ Wants {ratioPercent(sum.wants_cents, needsWantsTotal)}%
-                  </span>
-                </span>
-                <span className="muted small">
-                  Plan {s.split_needs}/{s.split_wants}
-                </span>
-              </div>
-              <div
-                className="progress-track"
-                style={{ display: 'flex', marginTop: 6 }}
-                aria-hidden="true"
-              >
-                <div
-                  style={{
-                    width: `${ratioPercent(sum.needs_cents, needsWantsTotal)}%`,
-                    background: 'var(--needs)',
-                  }}
-                />
-                <div style={{ flex: 1, background: 'var(--wants)' }} />
-              </div>
-              <p className="tiny muted" style={{ marginTop: 4 }}>
-                Needs {fmt(sum.needs_cents)} · Wants {fmt(sum.wants_cents)}
-              </p>
+            <div className="panel kpi">
+              <span className="kpi-label">Spent</span>
+              <span className="kpi-value">{fmt(sum.spent_cents)}</span>
+            </div>
+            <div className="panel kpi">
+              <span className="kpi-label">Saved</span>
+              <span className="kpi-value pos">{fmt(sum.saved_cents)}</span>
+            </div>
+            <div className="panel kpi">
+              <span className="kpi-label">Savings rate</span>
+              <span className="kpi-value">{data.savings_rate_percent}%</span>
+              <span className="kpi-sub">Target {s.split_savings}%</span>
             </div>
           </section>
 
-          <section className="card" aria-labelledby="saved-h">
-            <h2 id="saved-h" style={{ marginBottom: 8 }}>
-              🍃 Money saved by dropping or pausing wants
-            </h2>
-            <div className="stat-grid">
-              <div className="stat">
-                <div className="tiny muted">Dropped wants ({data.money_saved.dropped_count})</div>
-                <div className="value positive">{fmt(data.money_saved.dropped_cents)}</div>
-              </div>
-              <div className="stat">
-                <div className="tiny muted">
-                  Paused after a warning ({data.money_saved.paused_count})
+          <div className="grid grid-main">
+            <section className="panel">
+              <PanelHead title="Spending by category" icon={BarChart3} />
+              {barConfig ? (
+                <div className="panel-body">
+                  <ChartCanvas config={barConfig} label="Bar chart of spending by category" />
                 </div>
-                <div className="value">{fmt(data.money_saved.paused_cents)}</div>
-              </div>
-            </div>
-            <p className="tiny muted" style={{ marginTop: 8 }}>
-              "Paused" counts times you chose remind later, next month or cancel.
-            </p>
-          </section>
-
-          <section className="card" aria-labelledby="em-h">
-            <h2 id="em-h" style={{ marginBottom: 8 }}>
-              Emergency fund
-            </h2>
-            <div className="spread small">
-              <Money cents={data.emergency.balance_cents} />
-              <span className="muted">
-                goal {fmt(data.emergency.target_cents)} (
-                {ratioPercent(
-                  Math.max(data.emergency.balance_cents, 0),
-                  data.emergency.target_cents,
-                )}
-                %)
-              </span>
-            </div>
-            <div className="progress-track" style={{ marginTop: 6 }} aria-hidden="true">
-              <div
-                className="progress-fill"
-                style={{
-                  width: `${Math.min(ratioPercent(Math.max(data.emergency.balance_cents, 0), data.emergency.target_cents), 100)}%`,
-                  background: 'var(--savings)',
-                }}
-              />
-            </div>
-          </section>
-
-          <section className="card" aria-labelledby="cat-h">
-            <h2 id="cat-h" style={{ marginBottom: 8 }}>
-              Spending by category
-            </h2>
-            {barConfig ? (
-              <>
-                <ChartCanvas config={barConfig} label="Bar chart of spending by category" />
-                <ul className="list small" style={{ marginTop: 8 }}>
+              ) : (
+                <EmptyState icon={BarChart3} title="No spending in this cycle" />
+              )}
+              {data.by_category.length > 0 && (
+                <ul className="rows" style={{ borderTop: '1px solid var(--border)' }}>
                   {data.by_category.map((c) => (
-                    <li key={c.name} style={{ minHeight: 36, padding: '4px 0' }}>
+                    <li key={c.name} className="item" style={{ minHeight: 44 }}>
                       <span
                         aria-hidden="true"
-                        style={{ width: 10, height: 10, borderRadius: 3, background: c.color }}
+                        style={{
+                          width: 10,
+                          height: 10,
+                          borderRadius: 3,
+                          background: c.color,
+                          flex: 'none',
+                        }}
                       />
-                      <span className="grow">{c.name}</span>
-                      <Money cents={c.total_cents} />
+                      <span className="grow small">{c.name}</span>
+                      <span className="tiny muted num">
+                        {ratioPercent(c.total_cents, sum.spent_cents)}%
+                      </span>
+                      <Money cents={c.total_cents} className="item-amount" />
                     </li>
                   ))}
                 </ul>
-              </>
-            ) : (
-              <EmptyState emoji="📊" title="No spending in this cycle" />
-            )}
-          </section>
+              )}
+            </section>
 
-          <section className="card" aria-labelledby="trend-h">
-            <h2 id="trend-h" style={{ marginBottom: 8 }}>
-              Last 6 cycles
-            </h2>
-            {lineConfig && (
-              <ChartCanvas
-                config={lineConfig}
-                label="Line chart of income, spending and savings over the last 6 cycles"
-              />
-            )}
-          </section>
+            <div className="stack">
+              <section className="panel">
+                <PanelHead
+                  title="Needs vs wants"
+                  icon={Scale}
+                  subtitle={`Your plan: ${s.split_needs}% / ${s.split_wants}%`}
+                />
+                <div className="panel-body stack-sm">
+                  <div className="split-bar" aria-hidden="true">
+                    <div style={{ width: `${needsPct}%`, background: 'var(--needs)' }} />
+                    <div style={{ flex: 1, background: 'var(--wants)' }} />
+                  </div>
+                  <div className="legend">
+                    <span>
+                      <i style={{ background: 'var(--needs)' }} /> Needs {needsPct}% ·{' '}
+                      {fmt(sum.needs_cents)}
+                    </span>
+                    <span>
+                      <i style={{ background: 'var(--wants)' }} /> Wants{' '}
+                      {needsWantsTotal ? 100 - needsPct : 0}% · {fmt(sum.wants_cents)}
+                    </span>
+                  </div>
+                </div>
+              </section>
 
-          <button className="btn block" onClick={() => void exportCsv()}>
-            <Icon name="download" /> Export this cycle as CSV
-          </button>
+              <section className="panel">
+                <PanelHead title="Money kept" icon={Leaf} subtitle="By dropping or pausing wants" />
+                <div className="panel-body">
+                  <div className="stats">
+                    <div className="stat">
+                      <div className="label">Dropped ({data.money_saved.dropped_count})</div>
+                      <div className="value pos">{fmt(data.money_saved.dropped_cents)}</div>
+                    </div>
+                    <div className="stat">
+                      <div className="label">Paused ({data.money_saved.paused_count})</div>
+                      <div className="value">{fmt(data.money_saved.paused_cents)}</div>
+                    </div>
+                  </div>
+                  <p className="hint" style={{ marginTop: 10 }}>
+                    Paused = you chose remind later, next month or cancel after a warning.
+                  </p>
+                </div>
+              </section>
+
+              <section className="panel">
+                <PanelHead title="Emergency fund" icon={LifeBuoy} />
+                <div className="panel-body progress">
+                  <div className="spread small">
+                    <Money cents={data.emergency.balance_cents} className="strong" />
+                    <span className="muted num">
+                      of {fmt(data.emergency.target_cents)} · {emergencyPct}%
+                    </span>
+                  </div>
+                  <div className="track" aria-hidden="true">
+                    <div
+                      className="fill"
+                      style={{
+                        width: `${Math.min(emergencyPct, 100)}%`,
+                        background: 'var(--savings)',
+                      }}
+                    />
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
+
+          <section className="panel">
+            <PanelHead
+              title="Last 6 cycles"
+              icon={TrendingUp}
+              subtitle="Income, spending and savings per pay cycle"
+            />
+            <div className="panel-body">
+              {lineConfig && (
+                <ChartCanvas
+                  config={lineConfig}
+                  label="Chart of income, spending and savings over the last 6 cycles"
+                />
+              )}
+            </div>
+          </section>
         </>
       ) : null}
     </div>

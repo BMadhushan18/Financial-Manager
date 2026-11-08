@@ -1,7 +1,15 @@
-import { useEffect, useId, useRef, type ReactNode } from 'react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  CircleAlert,
+  MoreHorizontal,
+  X,
+  type LucideIcon,
+} from 'lucide-react';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import type { EntryType, ProgressBarData } from '../../shared/types';
+import { currencySymbol } from '../../shared/finance';
 import { useApp } from '../lib/context';
-import { Icon } from './Icon';
 
 /** Formatted money that respects privacy mode. */
 export function Money({
@@ -16,19 +24,33 @@ export function Money({
   const { fmt } = useApp();
   const text = fmt(cents);
   return (
-    <span className={`amount ${className ?? ''}`}>{signed && cents > 0 ? `+${text}` : text}</span>
+    <span className={`num ${className ?? ''}`}>{signed && cents > 0 ? `+${text}` : text}</span>
   );
 }
 
-/** NEED / WANT tag: colour + icon + text (never colour alone). */
-export function TypeTag({ type }: { type: EntryType }) {
-  return type === 'NEED' ? (
-    <span className="tag need">
-      <span aria-hidden="true">●</span> Need
+/** NEED / WANT badge: colour + text (never colour alone). */
+export function TypeBadge({ type }: { type: EntryType }) {
+  return (
+    <span className={`badge ${type === 'NEED' ? 'need' : 'want'}`}>
+      <span className="dot" aria-hidden="true" />
+      {type === 'NEED' ? 'Need' : 'Want'}
     </span>
-  ) : (
-    <span className="tag want">
-      <span aria-hidden="true">★</span> Want
+  );
+}
+
+export function Badge({
+  tone,
+  children,
+  dot,
+}: {
+  tone?: 'success' | 'danger' | 'warning' | 'brand' | 'outline' | 'need' | 'want';
+  children: ReactNode;
+  dot?: boolean;
+}) {
+  return (
+    <span className={`badge ${tone ?? ''}`}>
+      {dot && <span className="dot" aria-hidden="true" />}
+      {children}
     </span>
   );
 }
@@ -37,12 +59,10 @@ export function ProgressBar({
   label,
   data,
   color,
-  icon,
 }: {
   label: string;
   data: ProgressBarData;
   color: string;
-  icon: string;
 }) {
   const { fmt } = useApp();
   const width = Math.min(data.percent, 100);
@@ -50,15 +70,25 @@ export function ProgressBar({
   return (
     <div className="progress">
       <div className="spread small">
-        <span>
-          <span aria-hidden="true">{icon}</span> <strong>{label}</strong>
+        <span className="row strong">
+          <span
+            aria-hidden="true"
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: 2,
+              background: color,
+              display: 'inline-block',
+            }}
+          />
+          {label}
         </span>
-        <span className="amount muted">
-          {fmt(data.actual_cents)} of {fmt(data.plan_cents)}
+        <span className="num muted">
+          <span className="text-2 strong">{fmt(data.actual_cents)}</span> / {fmt(data.plan_cents)}
         </span>
       </div>
       <div
-        className="progress-track"
+        className="track"
         role="progressbar"
         aria-label={`${label}: ${data.percent}% of plan`}
         aria-valuenow={data.percent}
@@ -66,21 +96,21 @@ export function ProgressBar({
         aria-valuemax={100}
       >
         <div
-          className={`progress-fill ${over ? 'over' : ''}`}
+          className={`fill ${over ? 'over' : ''}`}
           style={{ width: `${width}%`, background: color }}
         />
       </div>
-      <span className={`tiny ${over ? 'soft-red' : 'muted'}`}>
+      <span className={`tiny ${over ? 'neg' : 'muted'}`}>
         {over
-          ? `You are ${fmt(data.over_cents)} over your ${label.toLowerCase()} plan`
-          : `${data.percent}% used`}
+          ? `${fmt(data.over_cents)} over your ${label.toLowerCase()} plan`
+          : `${data.percent}% of plan used`}
       </span>
     </div>
   );
 }
 
 export function Skeleton({
-  height = 20,
+  height = 16,
   width = '100%',
 }: {
   height?: number;
@@ -89,16 +119,15 @@ export function Skeleton({
   return <div className="skeleton" style={{ height, width }} aria-hidden="true" />;
 }
 
-export function LoadingCards({ count = 3 }: { count?: number }) {
+export function LoadingPanels({ count = 3 }: { count?: number }) {
   return (
     <div className="stack" aria-busy="true" aria-label="Loading">
       {Array.from({ length: count }, (_, i) => (
-        <div className="card" key={i}>
-          <Skeleton height={18} width="40%" />
-          <div style={{ height: 10 }} />
-          <Skeleton height={14} />
-          <div style={{ height: 6 }} />
-          <Skeleton height={14} width="70%" />
+        <div className="panel panel-body stack-sm" key={i}>
+          <Skeleton height={14} width="30%" />
+          <Skeleton height={24} width="55%" />
+          <Skeleton height={12} />
+          <Skeleton height={12} width="75%" />
         </div>
       ))}
     </div>
@@ -106,23 +135,23 @@ export function LoadingCards({ count = 3 }: { count?: number }) {
 }
 
 export function EmptyState({
-  emoji,
+  icon: Icon,
   title,
   text,
   action,
 }: {
-  emoji: string;
+  icon: LucideIcon;
   title: string;
   text?: string;
   action?: ReactNode;
 }) {
   return (
     <div className="empty">
-      <span className="emoji" aria-hidden="true">
-        {emoji}
+      <span className="tile" aria-hidden="true">
+        <Icon size={22} />
       </span>
-      <strong>{title}</strong>
-      {text && <p className="muted small">{text}</p>}
+      <h3>{title}</h3>
+      {text && <p>{text}</p>}
       {action}
     </div>
   );
@@ -130,28 +159,56 @@ export function EmptyState({
 
 export function ErrorBox({ message, onRetry }: { message: string; onRetry?: () => void }) {
   return (
-    <div className="error-box" role="alert">
-      <p>{message}</p>
-      {onRetry && (
-        <button className="btn small" style={{ marginTop: 8 }} onClick={onRetry}>
-          Try again
-        </button>
-      )}
+    <div className="callout danger" role="alert">
+      <CircleAlert size={18} />
+      <div className="grow">
+        <p>{message}</p>
+        {onRetry && (
+          <button className="btn sm" style={{ marginTop: 10 }} onClick={onRetry}>
+            Try again
+          </button>
+        )}
+      </div>
     </div>
   );
 }
 
-/** Accessible bottom sheet (dialog). Esc or backdrop tap closes it. */
-export function Sheet({
+export function PanelHead({
   title,
-  onClose,
-  children,
-  labelledBy,
+  icon: Icon,
+  subtitle,
+  action,
 }: {
   title: string;
+  icon?: LucideIcon;
+  subtitle?: ReactNode;
+  action?: ReactNode;
+}) {
+  return (
+    <div className="panel-head">
+      <div className="grow">
+        <h2>
+          {Icon && <Icon size={18} aria-hidden="true" />}
+          {title}
+        </h2>
+        {subtitle && <p>{subtitle}</p>}
+      </div>
+      {action}
+    </div>
+  );
+}
+
+/** Accessible dialog: bottom sheet on phones, centred modal on larger screens. */
+export function Sheet({
+  title,
+  subtitle,
+  onClose,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
   onClose: () => void;
   children: ReactNode;
-  labelledBy?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const titleId = useId();
@@ -162,7 +219,7 @@ export function Sheet({
     const previous = document.activeElement as HTMLElement | null;
     const node = ref.current;
     const first = node?.querySelector<HTMLElement>(
-      '[autofocus], input, select, textarea, button:not(.icon-btn)',
+      '[autofocus], .sheet-body input, .sheet-body select, .sheet-body textarea, .sheet-body button',
     );
     (first ?? node)?.focus();
     const onKey = (e: KeyboardEvent) => {
@@ -199,18 +256,20 @@ export function Sheet({
         className="sheet"
         role="dialog"
         aria-modal="true"
-        aria-labelledby={labelledBy ?? titleId}
+        aria-labelledby={titleId}
         ref={ref}
         tabIndex={-1}
       >
-        <div className="sheet-handle" aria-hidden="true" />
         <div className="sheet-head">
-          <h2 id={titleId}>{title}</h2>
-          <button className="icon-btn" onClick={onClose} aria-label="Close">
-            <Icon name="close" />
+          <div>
+            <h2 id={titleId}>{title}</h2>
+            {subtitle && <p>{subtitle}</p>}
+          </div>
+          <button className="icon-btn sm" onClick={onClose} aria-label="Close">
+            <X size={18} />
           </button>
         </div>
-        {children}
+        <div className="sheet-body">{children}</div>
       </div>
     </div>
   );
@@ -237,22 +296,23 @@ export function MoneyField({
   const { currency } = useApp();
   return (
     <div className="field">
-      <label htmlFor={id}>
-        {label} <span className="muted">({currency})</span>
-      </label>
-      <input
-        id={id}
-        className={`input ${big ? 'money' : ''}`}
-        type="text"
-        inputMode="decimal"
-        autoComplete="off"
-        placeholder="0.00"
-        value={value}
-        autoFocus={autoFocus}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={error ? `${id}-err` : hint ? `${id}-hint` : undefined}
-        onChange={(e) => onChange(e.target.value)}
-      />
+      <label htmlFor={id}>{label}</label>
+      <div className={`money-input ${big ? 'big' : ''}`}>
+        <span className="prefix">{currencySymbol(currency).trim()}</span>
+        <input
+          id={id}
+          className="input"
+          type="text"
+          inputMode="decimal"
+          autoComplete="off"
+          placeholder="0.00"
+          value={value}
+          autoFocus={autoFocus}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${id}-err` : hint ? `${id}-hint` : undefined}
+          onChange={(e) => onChange(e.target.value)}
+        />
+      </div>
       {hint && !error && (
         <span className="hint" id={`${id}-hint`}>
           {hint}
@@ -297,21 +357,139 @@ export function Segmented<T extends string>({
   );
 }
 
-export function Field({
+export interface MenuItem {
+  label: string;
+  icon?: LucideIcon;
+  onClick: () => void;
+  danger?: boolean;
+  divider?: boolean;
+}
+
+/** "More" dropdown menu (kebab). Closes on outside click or Escape. */
+export function Menu({ label, items }: { label: string; items: MenuItem[] }) {
+  const [open, setOpen] = useState(false);
+  const wrap = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (!wrap.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    wrap.current?.querySelector<HTMLElement>('.menu button')?.focus();
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+  return (
+    <div className="menu-wrap" ref={wrap}>
+      <button
+        type="button"
+        className="icon-btn sm"
+        aria-label={label}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <MoreHorizontal size={18} />
+      </button>
+      {open && (
+        <div className="menu" role="menu">
+          {items.map((it, i) => (
+            <div key={i}>
+              {it.divider && <hr />}
+              <button
+                type="button"
+                role="menuitem"
+                className={it.danger ? 'danger' : ''}
+                onClick={() => {
+                  setOpen(false);
+                  it.onClick();
+                }}
+              >
+                {it.icon && <it.icon size={16} />}
+                {it.label}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** ‹ label › stepper for cycles. */
+export function PeriodSwitcher({
   label,
-  children,
-  hint,
+  sub,
+  onPrev,
+  onNext,
+  prevDisabled,
+  nextDisabled,
 }: {
   label: string;
-  children: (id: string) => ReactNode;
-  hint?: string;
+  sub?: string;
+  onPrev: () => void;
+  onNext: () => void;
+  prevDisabled?: boolean;
+  nextDisabled?: boolean;
+}) {
+  return (
+    <div className="period">
+      <button
+        className="icon-btn sm"
+        onClick={onPrev}
+        disabled={prevDisabled}
+        aria-label="Previous period"
+      >
+        <ChevronLeft size={18} />
+      </button>
+      <div className="label">
+        {label}
+        {sub && <small>{sub}</small>}
+      </div>
+      <button
+        className="icon-btn sm"
+        onClick={onNext}
+        disabled={nextDisabled}
+        aria-label="Next period"
+      >
+        <ChevronRight size={18} />
+      </button>
+    </div>
+  );
+}
+
+export function Toggle({
+  label,
+  checked,
+  onChange,
+  description,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  description?: string;
 }) {
   const id = useId();
   return (
-    <div className="field">
-      <label htmlFor={id}>{label}</label>
-      {children(id)}
-      {hint && <span className="hint">{hint}</span>}
+    <div className="switch-row">
+      <label htmlFor={id} className="grow">
+        <span className="strong small" style={{ display: 'block' }}>
+          {label}
+        </span>
+        {description && <span className="hint">{description}</span>}
+      </label>
+      <input
+        id={id}
+        type="checkbox"
+        role="switch"
+        className="toggle"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+      />
     </div>
   );
 }

@@ -14,13 +14,12 @@ import { HttpError, notFound } from './http';
 
 type Row = Record<string, unknown>;
 
-const userIdCache = new Map<string, number>();
-
-/** Find the user by email, creating them (with defaults) on first visit. */
+/**
+ * Find the user by email, creating them (with defaults) on first visit.
+ * Not cached in memory on purpose: an account can be deleted and recreated
+ * (seed / reset), and a stale id would point at missing data.
+ */
 export async function getUserId(db: D1Database, email: string): Promise<number> {
-  const cached = userIdCache.get(email);
-  if (cached) return cached;
-
   let row = await db
     .prepare('SELECT id FROM users WHERE email = ?')
     .bind(email)
@@ -41,7 +40,6 @@ export async function getUserId(db: D1Database, email: string): Promise<number> 
     }
   }
   if (!row) throw new HttpError(500, 'Could not create your account. Please try again.');
-  userIdCache.set(email, row.id);
   return row.id;
 }
 

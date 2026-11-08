@@ -1,3 +1,4 @@
+import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { parseMoneyToCents } from '../../shared/finance';
 import type { CurrentCycleResponse, SavingsMode } from '../../shared/types';
@@ -142,7 +143,11 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
   ) => (
     <div className="stack" style={{ gap: 10 }}>
       {rows.map((r, i) => (
-        <div key={i} className="card flat stack" style={{ gap: 8, padding: 12 }}>
+        <div
+          key={i}
+          className="panel panel-body stack-sm"
+          style={{ background: 'var(--surface-2)' }}
+        >
           <div className="field">
             <label htmlFor={`row-n-${i}`}>Name</label>
             <input
@@ -155,7 +160,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
               }
             />
           </div>
-          <div className="grid-2">
+          <div className="form-grid">
             <MoneyField
               label={withDay ? 'Amount' : 'Price'}
               value={r.amount}
@@ -181,7 +186,8 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
           </div>
           <button
             type="button"
-            className="btn small ghost"
+            className="btn sm danger-ghost"
+            style={{ alignSelf: 'flex-end' }}
             onClick={() => setRows(rows.filter((_, j) => j !== i))}
           >
             Remove
@@ -193,7 +199,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
         className="btn"
         onClick={() => setRows([...rows, { name: '', amount: '', day: '1' }])}
       >
-        + Add another
+        <Plus size={16} /> Add another
       </button>
     </div>
   );
@@ -280,19 +286,24 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
   if (step >= steps.length) {
     const safe = result?.safe_to_spend_cents;
     return (
-      <main>
-        <div className="stack" style={{ marginTop: 24 }}>
+      <main className="auth-main">
+        <div className="auth-card panel panel-body stack" style={{ maxWidth: 520, padding: 28 }}>
           <div className="steps" aria-hidden="true">
             {steps.map((_, i) => (
               <span key={i} className="on" />
             ))}
           </div>
-          <h1 style={{ fontSize: '1.4rem', margin: 0 }}>You are all set 🎉</h1>
+          <h1>You are all set</h1>
           {safe !== undefined && (
-            <section className={`card hero ${safe < 0 ? 'negative' : ''}`}>
-              <p className="label">Safe to spend this cycle</p>
-              <p className="big">{fmt(safe)}</p>
-              <p className="sub">
+            <section className="panel" style={{ padding: 20, background: 'var(--surface-2)' }}>
+              <p className="small muted strong">Safe to spend this cycle</p>
+              <p
+                className={`num ${safe < 0 ? 'neg' : ''}`}
+                style={{ fontSize: '2.2rem', fontWeight: 700, letterSpacing: '-0.03em' }}
+              >
+                {fmt(safe)}
+              </p>
+              <p className="text-2 small">
                 About {fmt(result!.safe_per_day_cents)} a day for {result!.days_left} days
               </p>
             </section>
@@ -306,8 +317,8 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
               {error}
             </p>
           )}
-          <button className="btn primary block" onClick={() => void finish()} disabled={busy}>
-            Go to my home
+          <button className="btn primary lg block" onClick={() => void finish()} disabled={busy}>
+            Open my dashboard
           </button>
         </div>
       </main>
@@ -316,22 +327,26 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
 
   const current = steps[step]!;
   return (
-    <main>
+    <main className="auth-main">
       <form
-        className="stack"
-        style={{ marginTop: 16 }}
+        className="auth-card panel panel-body stack"
+        style={{ maxWidth: 560, padding: 28 }}
         onSubmit={(e) => {
           e.preventDefault();
           void next();
         }}
       >
         <div className="spread">
-          <div className="steps" aria-label={`Step ${step + 1} of ${steps.length}`}>
+          <div
+            className="steps grow"
+            style={{ maxWidth: 240 }}
+            aria-label={`Step ${step + 1} of ${steps.length}`}
+          >
             {steps.map((_, i) => (
               <span key={i} className={i <= step ? 'on' : ''} />
             ))}
           </div>
-          <button type="button" className="btn small ghost" onClick={() => void finish()}>
+          <button type="button" className="btn sm ghost" onClick={() => void finish()}>
             Skip setup
           </button>
         </div>
@@ -339,8 +354,8 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
           <p className="tiny muted">
             Step {step + 1} of {steps.length}
           </p>
-          <h1 style={{ fontSize: '1.4rem', margin: '4px 0' }}>{current.title}</h1>
-          <p className="muted">{current.text}</p>
+          <h1 style={{ margin: '4px 0' }}>{current.title}</h1>
+          <p className="muted small">{current.text}</p>
         </div>
         {current.body}
         {error && (
@@ -348,7 +363,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
             {error}
           </p>
         )}
-        <button className="btn primary block" type="submit" disabled={busy}>
+        <button className="btn primary lg block" type="submit" disabled={busy}>
           {busy ? 'Saving…' : 'Next'}
         </button>
         <button className="btn ghost block" type="button" onClick={() => void skipStep()}>
