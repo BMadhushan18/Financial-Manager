@@ -27,6 +27,10 @@ export const DEFAULT_CATEGORIES: DefaultCategory[] = [
   { name: 'Hobbies', type: 'WANT', priority: 'LOW', icon: 'hobby', color: '#A855F7' },
   { name: 'Gifts', type: 'WANT', priority: 'MEDIUM', icon: 'gift', color: '#F43F5E' },
   { name: 'Travel', type: 'WANT', priority: 'LOW', icon: 'travel', color: '#FB923C' },
+  { name: 'Household', type: 'NEED', priority: 'MEDIUM', icon: 'sofa', color: '#0D9488' },
+  { name: 'Personal care', type: 'NEED', priority: 'MEDIUM', icon: 'sparkles', color: '#DB2777' },
+  { name: 'Kids & baby', type: 'NEED', priority: 'HIGH', icon: 'baby', color: '#7C3AED' },
+  { name: 'Pets', type: 'NEED', priority: 'MEDIUM', icon: 'pet', color: '#B45309' },
   { name: 'Other', type: 'WANT', priority: 'MEDIUM', icon: 'tag', color: '#94A3B8' },
 ];
 

@@ -13,9 +13,9 @@ const POPULAR = [
   'headphones',
   'rice-cooker',
   'laptop',
-  'books',
+  'wristwatch',
   'smartwatch',
-  'trip',
+  'weekend-trip',
 ];
 
 type Row =

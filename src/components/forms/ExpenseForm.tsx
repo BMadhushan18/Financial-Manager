@@ -17,7 +17,16 @@ import { ItemThumb } from '../ItemThumb';
 import { MoneyField, Sheet } from '../ui';
 
 /** Everyday purchases shown before the user has any history. */
-const STARTERS = ['fuel', 'groceries', 'bus', 'tuk', 'medicine', 'reload', 'coffee', 'restaurant'];
+const STARTERS = [
+  'bike-fuel',
+  'weekly-groceries',
+  'bus-fare',
+  'tuk-tuk-ride',
+  'medicine',
+  'mobile-reload',
+  'coffee',
+  'restaurant-meal',
+];
 
 interface Pick {
   name: string;

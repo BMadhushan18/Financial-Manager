@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { Image as ImageIcon } from 'lucide-react';
 import { useRef, useState } from 'react';
-import { CATALOG, catalogCredit } from '../../shared/catalog';
+import { CATALOG } from '../../shared/catalog';
 import { ItemThumb } from '../components/ItemThumb';
 import { CURRENCIES } from '../../shared/defaults';
 import { centsToInput, parseMoneyToCents } from '../../shared/finance';
@@ -57,6 +57,7 @@ export function Settings() {
   const [error, setError] = useState<string | null>(null);
   const [pwSheet, setPwSheet] = useState(false);
   const [credits, setCredits] = useState(false);
+  const [creditOf, setCreditOf] = useState<((id: string) => string | null) | null>(null);
   const [catSheet, setCatSheet] = useState<Category | 'new' | null>(null);
   const [billSheet, setBillSheet] = useState<number | 'new' | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -503,7 +504,13 @@ export function Settings() {
         type="button"
         className="btn ghost sm"
         style={{ alignSelf: 'center' }}
-        onClick={() => setCredits(true)}
+        onClick={() => {
+          setCredits(true);
+          // Full photo paths load only when the credits are opened.
+          void import('../../shared/catalog-credits').then((m) =>
+            setCreditOf(() => m.catalogCredit),
+          );
+        }}
       >
         <ImageIcon size={15} /> Item photo credits
       </button>
@@ -520,22 +527,22 @@ export function Settings() {
           onClose={() => setCredits(false)}
         >
           <p className="small text-2" style={{ marginBottom: 12 }}>
-            Item photos are lead images of Wikipedia articles, hosted by Wikimedia Commons and used
-            under their free licences (public domain, CC BY or CC BY-SA). Open an article to see the
-            photographer and licence.
+            Item photos come from Wikimedia Commons and are used under their free licences (public
+            domain, CC BY or CC BY-SA). Open “Photo source” to see the photographer and licence.
           </p>
           <ul className="rows panel">
-            {CATALOG.filter((c) => catalogCredit(c)).map((c) => (
+            {!creditOf && <li className="item muted small">Loading…</li>}
+            {CATALOG.filter((c) => creditOf?.(c.id)).map((c) => (
               <li key={c.id} className="item" style={{ minHeight: 48 }}>
                 <ItemThumb item={c} size={32} />
                 <span className="grow small">{c.name}</span>
                 <a
                   className="small"
-                  href={catalogCredit(c)!}
+                  href={creditOf!(c.id)!}
                   target="_blank"
                   rel="noreferrer noopener"
                 >
-                  {c.wiki}
+                  Photo source
                 </a>
               </li>
             ))}

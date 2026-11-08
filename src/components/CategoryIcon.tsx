@@ -1,4 +1,6 @@
 import {
+  Sofa,
+  Sparkles,
   Baby,
   Bus,
   Car,
@@ -57,6 +59,8 @@ export const CATEGORY_ICONS: Record<string, LucideIcon> = {
   fitness: Dumbbell,
   care: Scissors,
   bill: Receipt,
+  sofa: Sofa,
+  sparkles: Sparkles,
   tag: Tag,
 };
 
@@ -84,7 +88,9 @@ const BY_NAME: [RegExp, string][] = [
   [/pet|dog|cat/i, 'pet'],
   [/baby|kid|child/i, 'baby'],
   [/gym|fitness|sport/i, 'fitness'],
-  [/salon|hair|beauty|care/i, 'care'],
+  [/household|furniture|kitchen/i, 'sofa'],
+  [/personal care|cosmetic|beauty/i, 'sparkles'],
+  [/salon|hair|care/i, 'care'],
 ];
 
 export function categoryIconKey(
