@@ -1,0 +1,48 @@
+{
+  "name": "moneymind",
+  "private": true,
+  "version": "1.0.0",
+  "description": "MoneyMind – a calm salary, spending and wishlist manager on Cloudflare Pages + D1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:api": "wrangler pages dev dist --port 8788",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json && tsc -p functions && tsc -p scripts",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "npm run typecheck && npm run lint && npm run test && npm run build",
+    "db:migrate:local": "wrangler d1 migrations apply moneymind --local",
+    "db:migrate:remote": "wrangler d1 migrations apply moneymind --remote",
+    "seed:gen": "tsx scripts/generate-seed.ts",
+    "db:seed:local": "npm run seed:gen && wrangler d1 execute moneymind --local --file=seed/seed.sql",
+    "db:seed:remote": "npm run seed:gen && wrangler d1 execute moneymind --remote --file=seed/seed.sql"
+  },
+  "dependencies": {
+    "chart.js": "^4.5.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261104.1",
+    "@eslint/js": "^9.33.0",
+    "@types/node": "^24.2.1",
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
+    "@vitejs/plugin-react": "^5.0.0",
+    "eslint": "^9.33.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "globals": "^16.3.0",
+    "prettier": "^3.6.2",
+    "tsx": "^4.20.4",
+    "typescript": "~5.9.2",
+    "typescript-eslint": "^8.39.1",
+    "vite": "^7.1.2",
+    "vitest": "^3.2.4",
+    "wrangler": "^4.30.0"
+  }
+}

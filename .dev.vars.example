@@ -1,0 +1,8 @@
+# Copy this file to .dev.vars for local development (it is git-ignored).
+# Locally there is no Cloudflare Access, so the API uses this email instead.
+# It only works on localhost / 127.0.0.1 – never in production.
+DEV_USER_EMAIL=demo@moneymind.local
+
+# Optional in production (set in Cloudflare Pages > Settings > Variables):
+# ACCESS_TEAM_DOMAIN=yourteam.cloudflareaccess.com
+# ACCESS_AUD=your-access-application-audience-tag

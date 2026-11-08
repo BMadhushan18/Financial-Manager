@@ -1,0 +1,6 @@
+dist
+.wrangler
+node_modules
+coverage
+seed/seed.sql
+package-lock.json
