@@ -7,5 +7,5 @@ pages_build_output_dir = "./dist"
 [[d1_databases]]
 binding = "DB"
 database_name = "moneymind"
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "4943e3bc-e3b8-4bb9-a56a-db32fd7762b3"
 migrations_dir = "migrations"
